@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.macautoclean</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__SCRIPTS_DIR__/autoclean.sh</string>
+    <string>--execute</string>
+    <string>--yes</string>
+    <string>--scope</string>
+    <string>__SCOPE__</string>
+    <string>--notify</string>
+    <string>__NOTIFY_MODE__</string>
+  </array>
+__CALENDAR_BLOCK__
+  <key>StandardOutPath</key>
+  <string>__LOG_PATH__</string>
+  <key>StandardErrorPath</key>
+  <string>__LOG_PATH__</string>
+  <key>RunAtLoad</key>
+  <false/>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+</dict>
+</plist>
