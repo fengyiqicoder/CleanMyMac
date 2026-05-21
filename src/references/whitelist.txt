@@ -1,0 +1,125 @@
+# MacAutoClean whitelist — one prefix per line. Lines starting with '#' are comments.
+# safe_rm() refuses any path not matching a prefix here. Edit with extreme care.
+# '~' expands to $HOME at load time.
+
+# --- User-level caches & logs ---
+~/Library/Caches
+~/Library/Logs
+~/Library/Application Support/CrashReporter
+
+# --- Trash & Downloads ---
+~/.Trash
+~/Downloads
+
+# --- Browsers — caches & code-cache subfolders ONLY (never Cookies/Login Data) ---
+~/Library/Caches/Google/Chrome
+~/Library/Caches/com.google.Chrome
+~/Library/Caches/com.apple.Safari
+~/Library/Caches/Firefox
+~/Library/Caches/com.brave.Browser
+~/Library/Caches/com.microsoft.edgemac
+~/Library/Caches/Chromium
+~/Library/Application Support/Google/Chrome/Default/Code Cache
+~/Library/Application Support/Google/Chrome/Default/GPUCache
+~/Library/Application Support/Google/Chrome/Default/Service Worker
+~/Library/Application Support/Arc/User Data/Default/Code Cache
+~/Library/Application Support/Arc/User Data/Default/GPUCache
+~/Library/Application Support/Firefox/Profiles
+~/Library/Application Support/BraveSoftware/Brave-Browser/Default/Code Cache
+~/Library/Application Support/BraveSoftware/Brave-Browser/Default/GPUCache
+~/Library/Application Support/Microsoft Edge/Default/Code Cache
+~/Library/Application Support/Microsoft Edge/Default/GPUCache
+
+# --- Apple developer tools ---
+~/Library/Developer/Xcode/DerivedData
+~/Library/Developer/Xcode/Archives
+~/Library/Developer/Xcode/iOS DeviceSupport
+~/Library/Developer/Xcode/watchOS DeviceSupport
+~/Library/Developer/Xcode/tvOS DeviceSupport
+~/Library/Developer/CoreSimulator/Caches
+~/Library/Developer/CoreSimulator/Devices
+
+# --- iOS / iPad backups (advisor only suggests deletion; manual confirm required) ---
+~/Library/Application Support/MobileSync/Backup
+
+# --- Package manager caches ---
+~/.npm/_cacache
+~/.npm/_logs
+~/.yarn/cache
+~/Library/Caches/pnpm
+~/Library/pnpm/store
+~/Library/Caches/bun
+~/.bun/install/cache
+~/Library/Caches/pip
+~/Library/Caches/pypoetry
+~/Library/Caches/pyenv
+~/.cargo/registry/cache
+~/.cargo/registry/src
+~/.cargo/git/db
+~/go/pkg/mod/cache
+~/.gradle/caches
+~/.m2/repository/.cache
+~/.composer/cache
+~/.nuget/packages
+~/.conan/data
+~/.conan2/p
+~/.gem/cache
+
+# --- IDE caches (NOT user settings) ---
+~/Library/Caches/JetBrains
+~/Library/Caches/AndroidStudio
+~/Library/Caches/Google/AndroidStudio
+~/Library/Application Support/Code/Cache
+~/Library/Application Support/Code/CachedData
+~/Library/Application Support/Code/CachedExtensions
+~/Library/Application Support/Code/Code Cache
+~/Library/Application Support/Code/GPUCache
+~/Library/Application Support/Code/logs
+~/Library/Application Support/Code/User/workspaceStorage
+
+# --- Homebrew ---
+~/Library/Caches/Homebrew
+
+# --- Docker (volumes handled via docker prune in module command; this path is fallback only) ---
+~/Library/Containers/com.docker.docker/Data/log
+
+# --- Adobe ---
+~/Library/Caches/Adobe
+~/Library/Application Support/Adobe/Common/Media Cache
+~/Library/Application Support/Adobe/Common/Media Cache Files
+~/Library/Logs/Adobe
+
+# --- Social / chat apps — caches ONLY ---
+~/Library/Application Support/Slack/Cache
+~/Library/Application Support/Slack/Code Cache
+~/Library/Application Support/Slack/GPUCache
+~/Library/Application Support/Slack/Service Worker
+~/Library/Application Support/Slack/logs
+~/Library/Application Support/discord/Cache
+~/Library/Application Support/discord/Code Cache
+~/Library/Application Support/discord/GPUCache
+~/Library/Application Support/Microsoft/Teams/Cache
+~/Library/Application Support/Microsoft/Teams/Code Cache
+~/Library/Application Support/Microsoft/Teams/GPUCache
+~/Library/Application Support/Microsoft/Teams/Service Worker
+~/Library/Application Support/Microsoft/Teams/logs
+~/Library/Group Containers/UBF8T346G9.com.microsoft.teams/Library/Caches
+~/Library/Containers/ru.keepcoder.Telegram/Data/Library/Caches
+~/Library/Group Containers/6N38VWS5BX.ru.keepcoder.Telegram
+
+# --- Productivity / cloud sync caches ---
+~/Library/Caches/com.obsidian.Obsidian
+~/Library/Caches/com.getdropbox.dropbox
+~/Library/Application Support/Dropbox/instance1/logs
+~/Library/Application Support/Google/DriveFS/Logs
+
+# --- Games ---
+~/Library/Application Support/Steam/logs
+~/Library/Application Support/Steam/appcache
+~/Library/Application Support/minecraft/logs
+~/Library/Application Support/launcher/logs
+~/Library/Application Support/lunarclient/logs
+~/Library/Application Support/lunarclient/cache
+
+# --- macautoclean own state ---
+/tmp/macautoclean
