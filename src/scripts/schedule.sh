@@ -144,7 +144,7 @@ XML
 # Scope (default = safe categories only)
 SCOPE="system,dev,browser"
 NOTIFY_MODE="notify"
-if [[ -z "${PRESET_AUTO:-}" ]]; then
+if [[ -z "${PRESET_AUTO:-}" && "$DRY" -eq 0 ]]; then
   echo ""
   echo "What should each run do?"
   echo "  1) Clean safe categories (caches, logs, trash) + send notification  [recommended]"
