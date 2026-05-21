@@ -1,0 +1,11 @@
+# Logs and runtime state
+*.log
+.DS_Store
+tests/.tmp/
+/tmp/macautoclean/
+
+# Editor cruft
+.vscode/
+.idea/
+*.swp
+*~
