@@ -40,7 +40,7 @@ total_bytes=0
 total_modules=0
 scanned_modules=0
 
-[[ $QUIET -eq 0 ]] && log "Scanning modules in $MODULES_DIR..."
+if [[ $QUIET -eq 0 ]]; then log "Scanning modules in $MODULES_DIR..."; fi
 
 shopt -s nullglob
 for module_file in "$MODULES_DIR"/*.sh; do
@@ -95,4 +95,5 @@ emit_report \
   disk_free="$(disk_free_bytes)" \
   disk_used_pct="$(disk_used_pct)"
 
-[[ $QUIET -eq 0 ]] && log "Scan complete: $scanned_modules modules, $(format_bytes "$total_bytes") reclaimable."
+if [[ $QUIET -eq 0 ]]; then log "Scan complete: $scanned_modules modules, $(format_bytes "$total_bytes") reclaimable."; fi
+exit 0
