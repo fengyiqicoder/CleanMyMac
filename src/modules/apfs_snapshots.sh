@@ -1,0 +1,7 @@
+MODULE_NAME="APFS Local Time Machine Snapshots"
+MODULE_DESCRIPTION="Local Time Machine snapshots on the APFS root volume. Remote Time Machine backups are NOT affected."
+MODULE_RISK="low"
+MODULE_CATEGORY="system"
+MODULE_PATHS=("$HOME/Library/Logs")
+MODULE_COMMAND='tmutil listlocalsnapshots / 2>/dev/null | sed -n "s/^com.apple.TimeMachine.//p" | while read s; do tmutil deletelocalsnapshots "$s" >/dev/null 2>&1; done'
+MODULE_REQUIRES="tmutil"
