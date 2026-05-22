@@ -23,27 +23,34 @@ Three separate layers. Never conflate them.
 ~/.claude/skills/macautoclean/scripts/diskmap.sh
 ```
 
-Output: every immediate child of `$HOME` (or a path you pass) sorted by size, each annotated as:
+Output: every folder ≥ 2 GB, auto-drilled to specific classifiable items, grouped into THREE tiers (no "unknown" — diskmap auto-classifies via registry + heuristics):
 
 | Icon | Tier | Meaning |
 |---|---|---|
-| ✅ | auto_safe | Matches a low-risk module (cache, build artifact). Deletable in bulk with no impact. |
-| ⚠️ | review | Matches a medium/high-risk module (Downloads aged, Xcode Archives, iOS backups). Decide per-item. |
+| ✅ | auto_safe | Cache / build artifact (registry match OR cache-name heuristic). Deletable in bulk with no impact. |
+| ⚠️ | review | Anything else (app data, sandboxed app, AI model weights, backups). Decide per-item. |
 | 🔒 | never_touch | User data, OS files, iCloud, Mail, Messages, Keychain, SSH/GPG/AWS. Protected. |
-| ❓ | unknown | No matching rule yet. Drill deeper or inspect manually. |
 
-To drill into anything:
+To drill into a specific path:
 ```
 diskmap.sh <path>          # e.g. diskmap.sh ~/Library
 diskmap.sh / --top 20      # full-disk view (some TCC denials expected)
+diskmap.sh --threshold 500M  # surface anything ≥ 500 MB
 diskmap.sh --json          # JSON output for parsing
 ```
 
-Present the table to the user. Lead with the 4 totals at the bottom:
-- ✅ auto-safe total → "X GB can be freed safely"
-- ⚠️ review total → "Y MB needs your decision"
-- 🔒 never-touch total → "Z GB is protected (Photos, Documents, iCloud, …)"
-- ❓ unknown total → "W GB needs exploration — want me to drill in?"
+### ⚠️ MANDATORY OUTPUT RULE — paste diskmap verbatim
+
+When presenting scan results to the user, you **MUST** paste the diskmap output VERBATIM inside a single fenced code block (```text … ```). Do not:
+- ❌ Reformat into markdown tables
+- ❌ Split items into your own sub-categories ("AI 类 / 应用类 / 开发类")
+- ❌ Drop columns, drop rows, or change column order
+- ❌ Add your own emoji/colors/icons on top of what diskmap already prints
+- ❌ Truncate paths or rename modules
+
+The diskmap output IS the canonical UI. It is fixed-width text with three sections (✅ AUTO-SAFE / ⚠️ NEEDS REVIEW / 🔒 NEVER-TOUCH), one item per line, format `SIZE | WHAT IT IS | WHERE`. Users specifically asked for this layout — preserve it byte-for-byte.
+
+After the code block, you MAY add at most ONE short sentence recommending the next step (e.g. "建议先清 27.7 GB 安全项 → `autoclean.sh --auto-safe --yes`"). Nothing more elaborate than that.
 
 ### Phase 2 — Act with autoclean
 
