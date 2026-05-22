@@ -7,3 +7,5 @@ MODULE_PATHS=(
   "$HOME/Library/Developer/Xcode/watchOS DeviceSupport"
   "$HOME/Library/Developer/Xcode/tvOS DeviceSupport"
 )
+MODULE_NAME_ZH="Xcode 设备符号"
+MODULE_DESCRIPTION_ZH="iOS/watchOS/tvOS 设备调试符号。下次连接同版本设备会重下。"

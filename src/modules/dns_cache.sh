@@ -6,3 +6,5 @@ MODULE_PATHS=("$HOME/Library/Logs")
 MODULE_COMMAND="dscacheutil -flushcache && killall -HUP mDNSResponder"
 MODULE_REQUIRES_SUDO=1
 MODULE_NOTES="Requires sudo. Skipped unless --with-sudo flag is passed."
+MODULE_NAME_ZH="DNS 缓存刷新"
+MODULE_DESCRIPTION_ZH="刷新系统 DNS 缓存。需要 sudo。"

@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/.yarn/cache")
 MODULE_COMMAND="yarn cache clean"
 MODULE_REQUIRES="yarn"
+MODULE_NAME_ZH="Yarn 缓存"
+MODULE_DESCRIPTION_ZH="Yarn 包缓存。下次 install 重下。"

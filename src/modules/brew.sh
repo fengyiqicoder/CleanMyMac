@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/Library/Caches/Homebrew")
 MODULE_COMMAND="brew cleanup -s && brew autoremove"
 MODULE_REQUIRES="brew"
+MODULE_NAME_ZH="Homebrew 缓存"
+MODULE_DESCRIPTION_ZH="Homebrew 下载的旧 formula、过期 bottle、无用依赖。"

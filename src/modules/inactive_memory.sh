@@ -6,3 +6,5 @@ MODULE_PATHS=("$HOME/Library/Logs")
 MODULE_COMMAND="purge"
 MODULE_REQUIRES_SUDO=1
 MODULE_NOTES="Requires sudo. Frees inactive memory rather than disk space; included for parity with mac-cleanup-py."
+MODULE_NAME_ZH="释放未活跃内存"
+MODULE_DESCRIPTION_ZH="强制 macOS 释放未活跃的内存页。需要 sudo。"

@@ -29,7 +29,7 @@ NEVER_TOUCH_PREFIXES=(
   "/Library/Frameworks"
   "/Library/Extensions"
 )
-NEVER_TOUCH_DESCS=(
+NEVER_TOUCH_DESCS_EN=(
   "User documents — irreplaceable"
   "Active workspace — irreplaceable"
   "Photos library — irreplaceable"
@@ -56,6 +56,38 @@ NEVER_TOUCH_DESCS=(
   "System frameworks"
   "System extensions"
 )
+NEVER_TOUCH_DESCS_ZH=(
+  "用户文档 — 无法恢复"
+  "活跃工作区 — 无法恢复"
+  "Photos 图库 — 无法恢复"
+  "视频库"
+  "音乐库"
+  "iCloud Drive — 同步目录，不要碰"
+  "Mail 邮件数据库"
+  "iMessage 数据库"
+  "钥匙串（密码和证书）"
+  "日历数据"
+  "通讯录数据库"
+  "SSH 密钥"
+  "GPG 密钥"
+  "AWS 凭证"
+  "Kubernetes 凭证"
+  "Docker 凭证"
+  "Google Cloud 凭证"
+  "macOS 系统文件"
+  "系统二进制"
+  "系统配置"
+  "系统运行时"
+  "系统运行时（镜像）"
+  "系统级应用支持"
+  "系统框架"
+  "系统扩展"
+)
+if [[ "${MAC_LANG:-en}" == "zh" ]]; then
+  NEVER_TOUCH_DESCS=("${NEVER_TOUCH_DESCS_ZH[@]}")
+else
+  NEVER_TOUCH_DESCS=("${NEVER_TOUCH_DESCS_EN[@]}")
+fi
 
 REGISTRY_PATH=()
 REGISTRY_TIER=()
@@ -91,8 +123,16 @@ build_registry() {
       REGISTRY_TIER+=("$tier")
       REGISTRY_MODULE+=("$base")
       REGISTRY_RISK+=("$MODULE_RISK")
-      REGISTRY_DESC+=("$MODULE_DESCRIPTION")
-      REGISTRY_NAME+=("$MODULE_NAME")
+      if [[ "${MAC_LANG:-en}" == "zh" && -n "${MODULE_NAME_ZH:-}" ]]; then
+        REGISTRY_NAME+=("$MODULE_NAME_ZH")
+      else
+        REGISTRY_NAME+=("$MODULE_NAME")
+      fi
+      if [[ "${MAC_LANG:-en}" == "zh" && -n "${MODULE_DESCRIPTION_ZH:-}" ]]; then
+        REGISTRY_DESC+=("$MODULE_DESCRIPTION_ZH")
+      else
+        REGISTRY_DESC+=("$MODULE_DESCRIPTION")
+      fi
     done
   done
 }

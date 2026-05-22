@@ -7,3 +7,5 @@ MODULE_PATHS=(
   "$HOME/Library/Application Support/discord/Code Cache"
   "$HOME/Library/Application Support/discord/GPUCache"
 )
+MODULE_NAME_ZH="Discord 缓存"
+MODULE_DESCRIPTION_ZH="Discord HTTP / Code / GPU 缓存。"

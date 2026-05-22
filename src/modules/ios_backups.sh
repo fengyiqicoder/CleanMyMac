@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/Library/Application Support/MobileSync/Backup")
 MODULE_AGE_DAYS=365
 MODULE_NOTES="Strongly recommend using the Advisor (advisor.sh) to review specific backups instead of bulk-clearing."
+MODULE_NAME_ZH="iOS / iPad 备份"
+MODULE_DESCRIPTION_ZH="MobileSync 下的设备备份。高风险 — 删了不能自动恢复。建议用 Advisor 查看具体备份。"

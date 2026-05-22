@@ -9,3 +9,5 @@ MODULE_PATHS=(
   "$HOME/Library/Application Support/Slack/Service Worker"
   "$HOME/Library/Application Support/Slack/logs"
 )
+MODULE_NAME_ZH="Slack 缓存"
+MODULE_DESCRIPTION_ZH="Slack 各种缓存和日志。登录态和 DM 保留。"

@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/Library/Caches/pip")
 MODULE_COMMAND="pip3 cache purge"
 MODULE_REQUIRES="pip3"
+MODULE_NAME_ZH="pip 缓存"
+MODULE_DESCRIPTION_ZH="pip wheel + HTTP 缓存。下次 install 重下。"

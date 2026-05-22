@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/go/pkg/mod/cache")
 MODULE_COMMAND="go clean -modcache"
 MODULE_REQUIRES="go"
+MODULE_NAME_ZH="Go modules 缓存"
+MODULE_DESCRIPTION_ZH="Go modules 下载缓存。"

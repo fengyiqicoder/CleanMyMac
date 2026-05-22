@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/Library/Developer/CoreSimulator/Caches")
 MODULE_COMMAND="xcrun simctl delete unavailable"
 MODULE_REQUIRES="xcrun"
+MODULE_NAME_ZH="iOS 模拟器（不可用的）"
+MODULE_DESCRIPTION_ZH="Xcode 标记为不可用的 iOS/iPadOS 模拟器。用 xcrun simctl 删除。"

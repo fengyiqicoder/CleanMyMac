@@ -9,3 +9,5 @@ MODULE_PATHS=(
   "$HOME/Library/Application Support/Google/Chrome/Default/GPUCache"
   "$HOME/Library/Application Support/Google/Chrome/Default/Service Worker"
 )
+MODULE_NAME_ZH="Chrome 缓存"
+MODULE_DESCRIPTION_ZH="Chrome HTTP / GPU / Code 缓存。Cookies、历史、书签不动。"

@@ -5,3 +5,5 @@ MODULE_CATEGORY="system"
 MODULE_PATHS=("$HOME/Library/Logs")
 MODULE_COMMAND='tmutil listlocalsnapshots / 2>/dev/null | sed -n "s/^com.apple.TimeMachine.//p" | while read s; do tmutil deletelocalsnapshots "$s" >/dev/null 2>&1; done'
 MODULE_REQUIRES="tmutil"
+MODULE_NAME_ZH="APFS 本地 Time Machine 快照"
+MODULE_DESCRIPTION_ZH="APFS 根卷上的本地 Time Machine 快照。远程 Time Machine 备份不受影响。"

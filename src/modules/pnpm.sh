@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/Library/Caches/pnpm" "$HOME/Library/pnpm/store")
 MODULE_COMMAND="pnpm store prune"
 MODULE_REQUIRES="pnpm"
+MODULE_NAME_ZH="pnpm store"
+MODULE_DESCRIPTION_ZH="pnpm 内容寻址 store。prune 删除未被引用的内容。"

@@ -72,7 +72,7 @@ done
 
 DU_FILE="$(mktemp)"
 DU_ERR="$(mktemp)"
-[[ $JSON -eq 0 ]] && log "Walking $START (this can take ~30s for a full home dir)..."
+[[ $JSON -eq 0 ]] && log "$(tr "Walking") $START ($(tr "this can take ~30s for a full home dir"))..."
 /usr/bin/du -k "$START" 2>"$DU_ERR" > "$DU_FILE" || true
 PERM_DENIED=0
 if grep -qi "permission denied\|operation not permitted" "$DU_ERR" 2>/dev/null; then
@@ -80,7 +80,7 @@ if grep -qi "permission denied\|operation not permitted" "$DU_ERR" 2>/dev/null; 
 fi
 
 RESULT_FILE="$(mktemp)"
-awk -v THRESHOLD_KB="$THRESHOLD_KB" -v REG="$REG_FILE" -v START="$START" '
+awk -v THRESHOLD_KB="$THRESHOLD_KB" -v REG="$REG_FILE" -v START="$START" -v MAC_LANG="$MAC_LANG" '
 BEGIN {
   n_reg = 0
   while ((getline line < REG) > 0) {
@@ -114,44 +114,43 @@ function basename(p,   n, arr) {
 
 function classify_heuristic(p,   bn) {
   bn = basename(p)
-  # Cache-like basenames or path contains a cache directory
   if (bn ~ /^(Cache|Caches|CachedData|CachedExtensions|GPUCache|Code Cache|ServiceWorker|Service Worker|logs|log|tmp|temp|cache|caches|.cache|crashpad|sentry|DiagnosticReports|CrashReporter)$/) {
     h_tier = "auto_safe"
-    h_desc = "Cache-like folder (heuristic: name matches cache pattern). Regenerated on next use."
+    h_desc = (MAC_LANG=="zh") ? "缓存类文件夹（启发式：目录名命中缓存模式）。下次使用时重建。" : "Cache-like folder (heuristic). Regenerated on next use."
     return
   }
   if (index(p, "/Cache/") > 0 || index(p, "/Caches/") > 0 || index(p, "/GPUCache") > 0 || index(p, "/Code Cache") > 0 || index(p, "/logs/") > 0 || index(p, "/log/") > 0) {
     h_tier = "auto_safe"
-    h_desc = "Inside cache/log subtree (heuristic). Regenerated on next use."
+    h_desc = (MAC_LANG=="zh") ? "位于缓存/日志子树（启发式）。下次使用时重建。" : "Inside cache/log subtree (heuristic). Regenerated on next use."
     return
   }
   if (index(p, "Backup") > 0 || index(p, "backup") > 0 || index(p, ".bak") > 0) {
     h_tier = "review"
-    h_desc = "Backup data — verify before deleting."
+    h_desc = (MAC_LANG=="zh") ? "备份数据 — 删除前请核实。" : "Backup data — verify before deleting."
     return
   }
   if (index(p, "Application Support") > 0) {
     h_tier = "review"
-    h_desc = "App data under Application Support — may contain user state. Verify per app."
+    h_desc = (MAC_LANG=="zh") ? "Application Support 下的应用数据 — 可能含用户状态。逐 app 核实。" : "App data under Application Support — may contain user state. Verify per app."
     return
   }
   if (index(p, "/Containers/") > 0) {
     h_tier = "review"
-    h_desc = "Sandboxed app data — may contain user content. Verify per app."
+    h_desc = (MAC_LANG=="zh") ? "沙盒应用数据 — 可能含用户内容。逐 app 核实。" : "Sandboxed app data — may contain user content. Verify per app."
     return
   }
   if (index(p, "/Group Containers/") > 0) {
     h_tier = "review"
-    h_desc = "Shared sandboxed data — verify per group."
+    h_desc = (MAC_LANG=="zh") ? "共享沙盒数据 — 逐组核实。" : "Shared sandboxed data — verify per group."
     return
   }
-  if (index(p, "/Developer/") > 0 || index(p, "/Developer$") > 0) {
+  if (index(p, "/Developer/") > 0) {
     h_tier = "auto_safe"
-    h_desc = "Developer tools subtree (heuristic). Build artifacts typically regenerable."
+    h_desc = (MAC_LANG=="zh") ? "开发工具子树（启发式）。构建产物通常可重建。" : "Developer tools subtree (heuristic). Build artifacts typically regenerable."
     return
   }
   h_tier = "review"
-  h_desc = "Large folder, no specific rule. Inspect manually before deleting."
+  h_desc = (MAC_LANG=="zh") ? "大文件夹，无明确规则。删除前请人工检查。" : "Large folder, no specific rule. Inspect manually before deleting."
 }
 
 END {
@@ -183,17 +182,17 @@ END {
       src[p]    = "heuristic:" h_tier
       bn = basename(p)
       if (h_tier == "auto_safe") {
-        name[p] = bn " cache (heuristic)"
+        name[p] = (MAC_LANG=="zh") ? bn " 缓存（启发式）" : bn " cache (heuristic)"
       } else if (index(p, "Application Support") > 0) {
-        name[p] = bn " app data"
+        name[p] = (MAC_LANG=="zh") ? bn " 应用数据" : bn " app data"
       } else if (index(p, "/Containers/") > 0) {
-        name[p] = bn " sandbox data"
+        name[p] = (MAC_LANG=="zh") ? bn " 沙盒数据" : bn " sandbox data"
       } else if (index(p, "/Group Containers/") > 0) {
-        name[p] = bn " shared sandbox"
+        name[p] = (MAC_LANG=="zh") ? bn " 共享沙盒" : bn " shared sandbox"
       } else if (index(p, "Backup") > 0 || index(p, "backup") > 0) {
-        name[p] = bn " backup"
+        name[p] = (MAC_LANG=="zh") ? bn " 备份" : bn " backup"
       } else {
-        name[p] = bn " (unclassified)"
+        name[p] = (MAC_LANG=="zh") ? bn "（未分类）" : bn " (unclassified)"
       }
     }
   }
@@ -282,10 +281,11 @@ fi
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════════════════════╗"
-printf "║  Disk map  —  %-62s║\n" "$START"
-printf "║  Threshold ≥ %-7s  •  auto-drilled to specific classifiable items        ║\n" "$(format_bytes "$((THRESHOLD_KB*1024))")"
+pad_banner() { python3 -c "import sys,unicodedata; s=sys.argv[1]; w=sum(2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in s); print(s + ' '*(max(0,76-w)) + '║')" "$1"; }
+printf "║  %s\n" "$(pad_banner "$(tr "Disk map")  —  $START")"
+printf "║  %s\n" "$(pad_banner "$(tr "Threshold ≥") $(format_bytes "$((THRESHOLD_KB*1024))")  •  $(tr "auto-drilled to specific classifiable items")")"
 if [[ $PERM_DENIED -eq 1 ]]; then
-  printf "║  ⚠️  some paths denied by macOS TCC — true totals may be higher              ║\n"
+  printf "║  ⚠️  $(tr "some paths denied by macOS TCC — true totals may be higher")              ║\n"
 fi
 echo "╚══════════════════════════════════════════════════════════════════════════════╝"
 
@@ -298,22 +298,30 @@ print_section() {
     total=$((total + tb))
     count=$((count + 1))
     short_path="${tp/#$HOME/~}"
-    # Truncate name to 38 chars; pad path field is open (terminal-wide)
     nm="${tn:0:38}"
-    printf "  %-9s  %-38s  %s\n" "$(format_bytes "$tb")" "$nm" "$short_path" >> "$rows"
+    if [[ "${MAC_LANG:-en}" == "zh" ]]; then
+      # CJK chars take 2 display cells but printf counts as 1.
+      # Pad via python (handles east-asian-width).
+      nm_padded=$(python3 -c "import sys,unicodedata
+s=sys.argv[1]; w=sum(2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in s)
+print(s + ' '*(max(0,38-w)))" "$nm")
+      printf "  %-9s  %s  %s\n" "$(format_bytes "$tb")" "$nm_padded" "$short_path" >> "$rows"
+    else
+      printf "  %-9s  %-38s  %s\n" "$(format_bytes "$tb")" "$nm" "$short_path" >> "$rows"
+    fi
   done < "$SORTED"
   [[ $count -eq 0 ]] && { rm -f "$rows"; return; }
   echo ""
-  printf "%s  %s  (%d items, %s)  — %s\n" "$icon" "$label" "$count" "$(format_bytes "$total")" "$tagline"
-  printf "  %-9s  %-38s  %s\n" "SIZE" "WHAT IT IS" "WHERE"
+  printf "%s  %s  (%d $(tr "items"), %s)  — %s\n" "$icon" "$label" "$count" "$(format_bytes "$total")" "$tagline"
+  printf "  %-9s  %-38s  %s\n" "$(tr "SIZE")" "$(tr "WHAT IT IS")" "$(tr "WHERE")"
   echo "  ─────────  ──────────────────────────────────────  ──────────────────────────────"
   cat "$rows"
   rm -f "$rows"
 }
 
-print_section "auto_safe"   "AUTO-SAFE — delete now"     "✅" "no impact, regenerable"
-print_section "review"      "NEEDS REVIEW — your call"   "⚠️ " "decide per item"
-[[ $HIDE_NEVER -eq 1 ]] || print_section "never_touch" "NEVER-TOUCH — protected (info only)" "🔒" "user/system data"
+print_section "auto_safe"   "$(tr "AUTO-SAFE — delete now")"     "✅" "$(tr "no impact, regenerable")"
+print_section "review"      "$(tr "NEEDS REVIEW — your call")"   "⚠️ " "$(tr "decide per item")"
+[[ $HIDE_NEVER -eq 1 ]] || print_section "never_touch" "$(tr "NEVER-TOUCH — protected (info only)")" "🔒" "$(tr "user/system data")"
 
 AS=$(awk -F'|' '$1=="auto_safe"{s+=$2} END{print s+0}' "$RESULT_FILE")
 RV=$(awk -F'|' '$1=="review"{s+=$2} END{print s+0}' "$RESULT_FILE")
@@ -321,9 +329,9 @@ NT=$(awk -F'|' '$1=="never_touch"{s+=$2} END{print s+0}' "$RESULT_FILE")
 
 echo ""
 echo "══════════════════════════════════════════════════════════════════════════════════"
-printf "  ✅ Auto-safe (delete):   %s\n" "$(format_bytes "$AS")"
-printf "  ⚠️  Review (your call):   %s\n" "$(format_bytes "$RV")"
-printf "  🔒 Never-touch (info):   %s\n" "$(format_bytes "$NT")"
+printf "  ✅ $(tr "Auto-safe (delete):")   %s\n" "$(format_bytes "$AS")"
+printf "  ⚠️  $(tr "Review (your call):")   %s\n" "$(format_bytes "$RV")"
+printf "  🔒 $(tr "Never-touch (info):")   %s\n" "$(format_bytes "$NT")"
 echo "══════════════════════════════════════════════════════════════════════════════════"
 
 rm -f "$REG_FILE" "$DU_FILE" "$DU_ERR" "$RESULT_FILE" "$SORTED"

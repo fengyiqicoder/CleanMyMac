@@ -10,3 +10,5 @@ MODULE_PATHS=(
   "$HOME/Library/Application Support/Code/GPUCache"
   "$HOME/Library/Application Support/Code/logs"
 )
+MODULE_NAME_ZH="VS Code 缓存"
+MODULE_DESCRIPTION_ZH="VS Code 磁盘缓存。设置和扩展不动。"

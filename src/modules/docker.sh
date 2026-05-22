@@ -6,3 +6,5 @@ MODULE_PATHS=("$HOME/Library/Containers/com.docker.docker/Data/log")
 MODULE_COMMAND="docker container prune -f && docker image prune -f && docker builder prune -f && docker network prune -f"
 MODULE_REQUIRES="docker"
 MODULE_NOTES="Volumes are explicitly excluded. Running containers are not affected."
+MODULE_NAME_ZH="Docker 缓存"
+MODULE_DESCRIPTION_ZH="已停止容器、悬空镜像、构建缓存、未用网络。Volumes 永远不动。"

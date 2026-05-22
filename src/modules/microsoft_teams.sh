@@ -10,3 +10,5 @@ MODULE_PATHS=(
   "$HOME/Library/Application Support/Microsoft/Teams/logs"
   "$HOME/Library/Group Containers/UBF8T346G9.com.microsoft.teams/Library/Caches"
 )
+MODULE_NAME_ZH="Microsoft Teams 缓存"
+MODULE_DESCRIPTION_ZH="Microsoft Teams 缓存和日志（经典版 + 新版）。"

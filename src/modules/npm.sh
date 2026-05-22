@@ -5,3 +5,5 @@ MODULE_CATEGORY="dev"
 MODULE_PATHS=("$HOME/.npm/_cacache" "$HOME/.npm/_logs")
 MODULE_COMMAND="npm cache clean --force"
 MODULE_REQUIRES="npm"
+MODULE_NAME_ZH="npm 缓存"
+MODULE_DESCRIPTION_ZH="npm 下载缓存。下次 install 时自动重下。"

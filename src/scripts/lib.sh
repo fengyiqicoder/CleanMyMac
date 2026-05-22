@@ -14,6 +14,41 @@ _LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
 
+
+# ---- i18n ----
+MAC_LANG="en"
+case "${LANG:-${LC_ALL:-${LC_CTYPE:-}}}" in
+  zh*|*ZH*) MAC_LANG="zh" ;;
+esac
+
+# tr <english-key> — returns localized version (falls back to key if no translation)
+tr() {
+  local k="$1"
+  if [[ "$MAC_LANG" != "zh" ]]; then echo "$k"; return; fi
+  case "$k" in
+    "Disk map") echo "磁盘地图" ;;
+    "Threshold ≥") echo "阈值 ≥" ;;
+    "auto-drilled to specific classifiable items") echo "已自动深入到可分类的具体项目" ;;
+    "some paths denied by macOS TCC — true totals may be higher") echo "部分路径被 macOS TCC 拒绝 — 实际总量可能更大" ;;
+    "AUTO-SAFE — delete now") echo "安全清理 — 立即可删" ;;
+    "NEEDS REVIEW — your call") echo "需要审核 — 你来决定" ;;
+    "NEVER-TOUCH — protected (info only)") echo "受保护 — 不动（仅供参考）" ;;
+    "no impact, regenerable") echo "无影响，可重建" ;;
+    "decide per item") echo "逐项决定" ;;
+    "user/system data") echo "用户/系统数据" ;;
+    "SIZE") echo "大小" ;;
+    "WHAT IT IS") echo "是什么" ;;
+    "WHERE") echo "位置" ;;
+    "items") echo "项" ;;
+    "Auto-safe (delete):") echo "安全清理（可直接删）：" ;;
+    "Review (your call):") echo "需要审核（你决定）：" ;;
+    "Never-touch (info):") echo "受保护（仅参考）：" ;;
+    "Walking") echo "正在扫描" ;;
+    "this can take ~30s for a full home dir") echo "全 home 目录约 30 秒" ;;
+    *) echo "$k" ;;
+  esac
+}
+
 log()  { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG_FILE" >&2; }
 warn() { printf '[%s] WARN: %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG_FILE" >&2; }
 err()  { printf '[%s] ERROR: %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG_FILE" >&2; }
@@ -78,6 +113,7 @@ load_module() {
   local module_file="$1"
   [[ -f "$module_file" ]] || { err "module not found: $module_file"; return 1; }
   unset MODULE_NAME MODULE_DESCRIPTION MODULE_RISK MODULE_CATEGORY
+  unset MODULE_NAME_ZH MODULE_DESCRIPTION_ZH
   unset MODULE_PATHS MODULE_COMMAND MODULE_AGE_DAYS MODULE_REQUIRES
   unset MODULE_REQUIRES_SUDO MODULE_NOTES
   MODULE_PATHS=()
