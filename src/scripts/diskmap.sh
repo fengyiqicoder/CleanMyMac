@@ -59,12 +59,13 @@ build_registry
 REG_FILE="$(mktemp)"
 i=0
 while [[ $i -lt ${#REGISTRY_PATH[@]} ]]; do
-  printf '%s\t%s\t%s\t%s\t%s\n' \
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
     "${REGISTRY_PATH[$i]}" \
     "${REGISTRY_TIER[$i]}" \
     "${REGISTRY_MODULE[$i]}" \
     "${REGISTRY_RISK[$i]}" \
     "${REGISTRY_DESC[$i]}" \
+    "${REGISTRY_NAME[$i]}" \
     >> "$REG_FILE"
   i=$((i+1))
 done
@@ -90,6 +91,7 @@ BEGIN {
     reg_module[n_reg] = f[3]
     reg_risk[n_reg]   = f[4]
     reg_desc[n_reg]   = f[5]
+    reg_name[n_reg]   = f[6]
   }
   close(REG)
 }
@@ -172,12 +174,27 @@ END {
       module[p] = reg_module[best_idx]
       risk[p]   = reg_risk[best_idx]
       desc[p]   = reg_desc[best_idx]
+      name[p]   = reg_name[best_idx]
       src[p]    = "registry:" best_idx
     } else {
       classify_heuristic(p)
       tier[p]   = h_tier
       desc[p]   = h_desc
       src[p]    = "heuristic:" h_tier
+      bn = basename(p)
+      if (h_tier == "auto_safe") {
+        name[p] = bn " cache (heuristic)"
+      } else if (index(p, "Application Support") > 0) {
+        name[p] = bn " app data"
+      } else if (index(p, "/Containers/") > 0) {
+        name[p] = bn " sandbox data"
+      } else if (index(p, "/Group Containers/") > 0) {
+        name[p] = bn " shared sandbox"
+      } else if (index(p, "Backup") > 0 || index(p, "backup") > 0) {
+        name[p] = bn " backup"
+      } else {
+        name[p] = bn " (unclassified)"
+      }
     }
   }
 
@@ -228,11 +245,12 @@ END {
 
   for (p in emit) {
     if (!emit[p]) continue
-    printf "%s|%d|%s|%s|%s|%s\n", \
+    printf "%s|%d|%s|%s|%s|%s|%s\n", \
       tier[p], size_kb[p]*1024, p, \
       (p in module ? module[p] : ""), \
       (p in risk ? risk[p] : ""), \
-      (p in desc ? desc[p] : "")
+      (p in desc ? desc[p] : ""), \
+      (p in name ? name[p] : basename(p))
   }
 }
 ' "$DU_FILE" > "$RESULT_FILE"
@@ -275,17 +293,20 @@ print_section() {
   local target_tier="$1" label="$2" icon="$3" tagline="$4"
   local total=0 count=0
   local rows="$(mktemp)"
-  while IFS='|' read -r tt tb tp tm tr td; do
+  while IFS='|' read -r tt tb tp tm tr td tn; do
     [[ "$tt" != "$target_tier" ]] && continue
     total=$((total + tb))
     count=$((count + 1))
     short_path="${tp/#$HOME/~}"
-    printf "  %-10s  %s\n              %s\n" "$(format_bytes "$tb")" "$short_path" "$td" >> "$rows"
+    # Truncate name to 38 chars; pad path field is open (terminal-wide)
+    nm="${tn:0:38}"
+    printf "  %-9s  %-38s  %s\n" "$(format_bytes "$tb")" "$nm" "$short_path" >> "$rows"
   done < "$SORTED"
   [[ $count -eq 0 ]] && { rm -f "$rows"; return; }
   echo ""
   printf "%s  %s  (%d items, %s)  — %s\n" "$icon" "$label" "$count" "$(format_bytes "$total")" "$tagline"
-  echo "──────────────────────────────────────────────────────────────────────────────────"
+  printf "  %-9s  %-38s  %s\n" "SIZE" "WHAT IT IS" "WHERE"
+  echo "  ─────────  ──────────────────────────────────────  ──────────────────────────────"
   cat "$rows"
   rm -f "$rows"
 }

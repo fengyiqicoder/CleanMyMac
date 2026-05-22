@@ -62,6 +62,7 @@ REGISTRY_TIER=()
 REGISTRY_MODULE=()
 REGISTRY_RISK=()
 REGISTRY_DESC=()
+REGISTRY_NAME=()
 
 build_registry() {
   REGISTRY_PATH=(); REGISTRY_TIER=(); REGISTRY_MODULE=(); REGISTRY_RISK=(); REGISTRY_DESC=()
@@ -72,6 +73,7 @@ build_registry() {
     REGISTRY_MODULE+=("")
     REGISTRY_RISK+=("")
     REGISTRY_DESC+=("${NEVER_TOUCH_DESCS[$i]}")
+    REGISTRY_NAME+=("${NEVER_TOUCH_DESCS[$i]}")
     i=$((i+1))
   done
   shopt -s nullglob
@@ -90,6 +92,7 @@ build_registry() {
       REGISTRY_MODULE+=("$base")
       REGISTRY_RISK+=("$MODULE_RISK")
       REGISTRY_DESC+=("$MODULE_DESCRIPTION")
+      REGISTRY_NAME+=("$MODULE_NAME")
     done
   done
 }
