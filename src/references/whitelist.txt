@@ -143,7 +143,6 @@
 
 # --- Added 2026-05-22 (round 2): app-level modules for deep-drill diskmap ---
 ~/Library/Application Support/Claude
-~/Library/Application Support/Google
 ~/Library/Application Support/Notion
 ~/Library/Containers/com.tencent.xinWeChat
 ~/Library/Group Containers
