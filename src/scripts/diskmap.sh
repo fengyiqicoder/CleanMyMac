@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
-# diskmap.sh — deep-recursive disk scanner with auto-drill until classifiable.
+# diskmap.sh — deep auto-drill disk scanner.
 #
-# Walks the file tree from START recursively (default $HOME). For every folder
-# at or above THRESHOLD (default 2 GB), looks up its path against the registry
-# (61 cleanup modules + hardcoded never-touch list).
+# Walks the file tree from START. For every folder >= THRESHOLD (default 2 GB),
+# classifies into one of THREE actionable buckets — no "unknown" tier shown:
 #
-# Emission rules:
-#   - The START path itself is never emitted.
-#   - CLASSIFIED P: emit, unless a big ancestor is classified by the same module
-#     (the ancestor module umbrella covers P).
-#   - UNKNOWN P: emit, unless any non-START big ancestor exists (the ancestor
-#     is the natural umbrella), or any big descendant is classified (descendant
-#     gives more specific info).
+#   ✅ auto_safe    — caches and build artifacts (registry match OR cache-name heuristic)
+#   ⚠️ review      — anything else (registry match OR heuristic for app data / sandbox / backup / generic)
+#   🔒 never_touch — Photos / Documents / iCloud / Mail / Keychain / etc.
 #
-# Output: one ranked table grouped by tier (auto_safe -> review -> unknown ->
-# never_touch), each row showing size, path, classification, and the one-line
-# "what it is / what happens if deleted" description.
+# Drills unknown subtrees down to LEAVES (no big sub-children) so that what
+# the user sees is at the most-specific-classifiable level (e.g.,
+# `~/Library/Application Support/Notion` instead of just `~/Library`).
 #
 # Usage:
 #   diskmap.sh                      # scan $HOME, threshold 2 GB
-#   diskmap.sh /                    # full disk (some TCC denials likely)
+#   diskmap.sh /                    # full disk
 #   diskmap.sh --threshold 500M     # show anything >= 500 MB
 #   diskmap.sh ~/Library            # drill into a specific subtree
-#   diskmap.sh --json               # machine-readable JSON output
+#   diskmap.sh --json               # JSON output
 
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -40,7 +35,7 @@ while [[ $# -gt 0 ]]; do
     --threshold=*) THRESHOLD_RAW="${1#--threshold=}"; shift ;;
     --json) JSON=1; shift ;;
     --hide-never) HIDE_NEVER=1; shift ;;
-    -h|--help) sed -n '2,21p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     -*) err "unknown flag: $1"; exit 2 ;;
     *) START="$1"; shift ;;
   esac
@@ -110,8 +105,55 @@ BEGIN {
   }
 }
 
+function basename(p,   n, arr) {
+  n = split(p, arr, "/")
+  return arr[n]
+}
+
+function classify_heuristic(p,   bn) {
+  bn = basename(p)
+  # Cache-like basenames or path contains a cache directory
+  if (bn ~ /^(Cache|Caches|CachedData|CachedExtensions|GPUCache|Code Cache|ServiceWorker|Service Worker|logs|log|tmp|temp|cache|caches|.cache|crashpad|sentry|DiagnosticReports|CrashReporter)$/) {
+    h_tier = "auto_safe"
+    h_desc = "Cache-like folder (heuristic: name matches cache pattern). Regenerated on next use."
+    return
+  }
+  if (index(p, "/Cache/") > 0 || index(p, "/Caches/") > 0 || index(p, "/GPUCache") > 0 || index(p, "/Code Cache") > 0 || index(p, "/logs/") > 0 || index(p, "/log/") > 0) {
+    h_tier = "auto_safe"
+    h_desc = "Inside cache/log subtree (heuristic). Regenerated on next use."
+    return
+  }
+  if (index(p, "Backup") > 0 || index(p, "backup") > 0 || index(p, ".bak") > 0) {
+    h_tier = "review"
+    h_desc = "Backup data — verify before deleting."
+    return
+  }
+  if (index(p, "Application Support") > 0) {
+    h_tier = "review"
+    h_desc = "App data under Application Support — may contain user state. Verify per app."
+    return
+  }
+  if (index(p, "/Containers/") > 0) {
+    h_tier = "review"
+    h_desc = "Sandboxed app data — may contain user content. Verify per app."
+    return
+  }
+  if (index(p, "/Group Containers/") > 0) {
+    h_tier = "review"
+    h_desc = "Shared sandboxed data — verify per group."
+    return
+  }
+  if (index(p, "/Developer/") > 0 || index(p, "/Developer$") > 0) {
+    h_tier = "auto_safe"
+    h_desc = "Developer tools subtree (heuristic). Build artifacts typically regenerable."
+    return
+  }
+  h_tier = "review"
+  h_desc = "Large folder, no specific rule. Inspect manually before deleting."
+}
+
 END {
-  # Classify every big path (longest-prefix registry match) and store matched_idx.
+  # Pass 1: classify every big path via registry; otherwise mark as needing heuristic.
   for (i = 1; i <= n_big; i++) {
     p = big_paths[i]
     pl = length(p)
@@ -130,13 +172,23 @@ END {
       module[p] = reg_module[best_idx]
       risk[p]   = reg_risk[best_idx]
       desc[p]   = reg_desc[best_idx]
+      src[p]    = "registry:" best_idx
     } else {
-      tier[p]   = "unknown"
-      desc[p]   = "No matching rule — likely cache or worth manual inspection."
+      classify_heuristic(p)
+      tier[p]   = h_tier
+      desc[p]   = h_desc
+      src[p]    = "heuristic:" h_tier
     }
   }
 
-  # Decide emission.
+  # Pass 2: emission rules
+  #   START itself never emitted.
+  #   For registry-classified P: skip if a big ancestor matches the SAME module
+  #     (same registry-entry umbrellas P).
+  #   For heuristic-classified P: skip if any big DESCENDANT exists at all
+  #     (descendants always provide more specific info; we want leaves).
+  #   Exception: if heuristic P has no big descendants and no big ancestor is
+  #     heuristic-classified with the SAME tier, emit.
   for (i = 1; i <= n_big; i++) {
     p = big_paths[i]
     if (p == START) continue
@@ -145,7 +197,7 @@ END {
     mi_p = matched_idx[p]
 
     if (mi_p > 0) {
-      # Classified P: skip if same-umbrella ancestor exists.
+      # Registry-classified
       rp_p = reg_path[mi_p]; rl_p = length(rp_p)
       for (j = 1; j <= n_big; j++) {
         if (i == j) continue
@@ -161,36 +213,17 @@ END {
         skip = 1; break
       }
     } else {
-      # Unknown P: skip if any classified big descendant exists.
-      # (Classified descendant gives more specific info.)
+      # Heuristic — drill to leaves
       for (j = 1; j <= n_big; j++) {
         if (i == j) continue
-        q = big_paths[j]; ql = length(q)
-        if (ql > pl && substr(q, 1, pl+1) == p "/" && matched_idx[q] > 0) {
-          skip = 1; break
-        }
+        d = big_paths[j]; dl = length(d)
+        if (dl <= pl) continue
+        if (substr(d, 1, pl+1) != p "/") continue
+        skip = 1; break
       }
-      if (skip) continue
-      # Mark P as an unknown candidate. Final emit decided in pass 2 below.
-      unknown_cand[p] = 1
-      continue
     }
 
     if (!skip) emit[p] = 1
-  }
-
-  # Pass 2 for unknowns: among candidates, emit only those with no OTHER
-  # candidate as strict ancestor (the topmost unknown in each subtree).
-  for (p in unknown_cand) {
-    pl = length(p)
-    is_top = 1
-    for (q in unknown_cand) {
-      if (q == p) continue
-      ql = length(q)
-      if (ql >= pl) continue
-      if (substr(p, 1, ql+1) == q "/") { is_top = 0; break }
-    }
-    if (is_top && p != START) emit[p] = 1
   }
 
   for (p in emit) {
@@ -209,8 +242,7 @@ awk -F'|' '{
   rank = 9
   if ($1 == "auto_safe")   rank = 1
   else if ($1 == "review")    rank = 2
-  else if ($1 == "unknown")   rank = 3
-  else if ($1 == "never_touch") rank = 4
+  else if ($1 == "never_touch") rank = 3
   printf "%d|%015d|%s\n", rank, $2, $0
 }' "$RESULT_FILE" | sort -t'|' -k1,1n -k2,2r | cut -d'|' -f3- > "$SORTED"
 
@@ -223,10 +255,9 @@ if [[ $JSON -eq 1 ]]; then
   done < "$SORTED"
   AS=$(awk -F'|' '$1=="auto_safe"{s+=$2} END{print s+0}' "$RESULT_FILE")
   RV=$(awk -F'|' '$1=="review"{s+=$2} END{print s+0}' "$RESULT_FILE")
-  UN=$(awk -F'|' '$1=="unknown"{s+=$2} END{print s+0}' "$RESULT_FILE")
   NT=$(awk -F'|' '$1=="never_touch"{s+=$2} END{print s+0}' "$RESULT_FILE")
-  printf '{"_summary":1,"start":"%s","threshold_kb":%s,"perm_denied":%d,"auto_safe_bytes":%d,"review_bytes":%d,"unknown_bytes":%d,"never_touch_bytes":%d}\n' \
-    "$START" "$THRESHOLD_KB" "$PERM_DENIED" "$AS" "$RV" "$UN" "$NT"
+  printf '{"_summary":1,"start":"%s","threshold_kb":%s,"perm_denied":%d,"auto_safe_bytes":%d,"review_bytes":%d,"never_touch_bytes":%d}\n' \
+    "$START" "$THRESHOLD_KB" "$PERM_DENIED" "$AS" "$RV" "$NT"
   rm -f "$REG_FILE" "$DU_FILE" "$DU_ERR" "$RESULT_FILE" "$SORTED"
   exit 0
 fi
@@ -234,7 +265,7 @@ fi
 echo ""
 echo "╔══════════════════════════════════════════════════════════════════════════════╗"
 printf "║  Disk map  —  %-62s║\n" "$START"
-printf "║  Threshold ≥ %-7s  •  auto-drill until classifiable                      ║\n" "$(format_bytes "$((THRESHOLD_KB*1024))")"
+printf "║  Threshold ≥ %-7s  •  auto-drilled to specific classifiable items        ║\n" "$(format_bytes "$((THRESHOLD_KB*1024))")"
 if [[ $PERM_DENIED -eq 1 ]]; then
   printf "║  ⚠️  some paths denied by macOS TCC — true totals may be higher              ║\n"
 fi
@@ -249,9 +280,7 @@ print_section() {
     total=$((total + tb))
     count=$((count + 1))
     short_path="${tp/#$HOME/~}"
-    short_path="${short_path:0:48}"
-    short_desc="${td:0:60}"
-    printf "  %-10s  %-48s  %s\n" "$(format_bytes "$tb")" "$short_path" "$short_desc" >> "$rows"
+    printf "  %-10s  %s\n              %s\n" "$(format_bytes "$tb")" "$short_path" "$td" >> "$rows"
   done < "$SORTED"
   [[ $count -eq 0 ]] && { rm -f "$rows"; return; }
   echo ""
@@ -261,29 +290,20 @@ print_section() {
   rm -f "$rows"
 }
 
-print_section "auto_safe"  "AUTO-SAFE"   "✅" "delete for biggest space win, no impact"
-print_section "review"     "REVIEW"      "⚠️ " "decide per item (medium/high risk)"
-print_section "unknown"    "UNKNOWN"     "❓" "no matching rule — inspect or drill in"
-[[ $HIDE_NEVER -eq 1 ]] || print_section "never_touch" "NEVER-TOUCH" "🔒" "user/system data, protected"
+print_section "auto_safe"   "AUTO-SAFE — delete now"     "✅" "no impact, regenerable"
+print_section "review"      "NEEDS REVIEW — your call"   "⚠️ " "decide per item"
+[[ $HIDE_NEVER -eq 1 ]] || print_section "never_touch" "NEVER-TOUCH — protected (info only)" "🔒" "user/system data"
 
 AS=$(awk -F'|' '$1=="auto_safe"{s+=$2} END{print s+0}' "$RESULT_FILE")
 RV=$(awk -F'|' '$1=="review"{s+=$2} END{print s+0}' "$RESULT_FILE")
-UN=$(awk -F'|' '$1=="unknown"{s+=$2} END{print s+0}' "$RESULT_FILE")
 NT=$(awk -F'|' '$1=="never_touch"{s+=$2} END{print s+0}' "$RESULT_FILE")
 
 echo ""
 echo "══════════════════════════════════════════════════════════════════════════════════"
-printf "  ✅ Auto-safe to delete:   %s\n" "$(format_bytes "$AS")"
-printf "  ⚠️  Needs your review:     %s\n" "$(format_bytes "$RV")"
-printf "  ❓ Unknown (drill in):    %s\n" "$(format_bytes "$UN")"
-printf "  🔒 Never-touch (info):    %s\n" "$(format_bytes "$NT")"
+printf "  ✅ Auto-safe (delete):   %s\n" "$(format_bytes "$AS")"
+printf "  ⚠️  Review (your call):   %s\n" "$(format_bytes "$RV")"
+printf "  🔒 Never-touch (info):   %s\n" "$(format_bytes "$NT")"
 echo "══════════════════════════════════════════════════════════════════════════════════"
-echo ""
-echo "Next steps:"
-echo "  • Clean auto-safe items now:    autoclean.sh --auto-safe --yes"
-echo "  • Drill into a path:            diskmap.sh <path>"
-echo "  • Lower threshold:              diskmap.sh --threshold 500M"
-echo ""
 
 rm -f "$REG_FILE" "$DU_FILE" "$DU_ERR" "$RESULT_FILE" "$SORTED"
 exit 0
