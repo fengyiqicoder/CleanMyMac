@@ -123,3 +123,20 @@
 
 # --- macautoclean own state ---
 /tmp/macautoclean
+
+# --- Added 2026-05-22: umbrella modules for deep-scan annotation ---
+~/.cocoapods
+~/.cursor/Cache
+~/.cursor/CachedData
+~/.cursor/Code Cache
+~/.cursor/GPUCache
+~/.cursor/logs
+~/.dartServer
+~/.hermes
+~/.pub-cache
+~/.ollama/models
+~/.cache/huggingface
+~/.lmstudio
+~/.zed/cache
+~/Library/Caches/dev.zed.Zed
+~/.nvm/versions
