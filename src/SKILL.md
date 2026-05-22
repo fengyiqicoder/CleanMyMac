@@ -1,61 +1,83 @@
 ---
 name: macautoclean
-description: Use when the user wants to free disk space on a Mac. Triggers on "clean my Mac", "free up space", "disk full", "where did my storage go", "全自动清理 Mac", "清理储存空间", "Xcode is eating my disk", "Docker is huge", "set up auto cleanup", "find large unused folders", "find old AI models", "schedule cleanup". Runs a 51-module cleanup sweep classified into auto-safe / needs-review / skipped tiers; surfaces large/stale folders for review (local AI models, VMs, old node_modules, iOS backups, orphaned app data); and can install a recurring auto-cleanup via launchd.
+description: Use when the user wants to free disk space on a Mac. Triggers on "clean my Mac", "free up space", "disk full", "where did my storage go", "全自动清理 Mac", "清理储存空间", "Xcode is eating my disk", "Docker is huge", "what's taking my disk", "show me a disk map", "set up auto cleanup", "find large unused folders", "find old AI models", "schedule cleanup". Walks the filesystem from any path, annotates every folder with auto-safe / review / never-touch / unknown based on a 51-module judgment registry, and supports both bulk auto-clean and per-item interactive review. Can install recurring auto-cleanup via launchd.
 ---
 
 # MacAutoClean
 
-## Mental model: SCAN vs CLEAN
+## Architecture — discovery vs judgment vs action
 
-These are **two distinct concepts**. Never conflate them.
+Three separate layers. Never conflate them.
 
-| Concept | What it is | Permissions | Reversible? |
+| Layer | What it does | Script | Reversible? |
 |---|---|---|---|
-| **SCAN** | One-shot, read-only audit. Never crashes on permission errors. Classifies every module into **auto-safe** (regenerable cache, no impact) / **needs-review** (medium/high risk, user decides) / **skipped** (sudo or TCC). Reports per-item: what it is + what happens if deleted. | None required | N/A (no writes) |
-| **CLEAN** | Deletes. Auto-safe is bulk push-button. Review tier is **per-module interactive** — the user chooses one-by-one. | TCC for some paths | Caches regenerate; review-tier items are gone forever |
-
-The skill **always scans first** and presents the breakdown before any delete.
+| **DISCOVER** | Tree-walks the filesystem from any path (default `$HOME`). For each immediate child, looks up the path against the judgment registry and annotates it. Like OmniDiskSweeper but with built-in classification. | `diskmap.sh` | N/A (read-only) |
+| **JUDGE** | 51 cleanup modules + a hardcoded never-touch list form the **registry**. For any path, it answers: is this auto-safe / needs-review / never-touch / unknown? | `lib-registry.sh` (consumed by diskmap & autoclean) | N/A |
+| **ACT** | Deletes. Auto-safe runs in bulk. Review runs per-item interactively. Never-touch and unknown require explicit user opt-in. | `autoclean.sh`, `execute.sh` | Caches regenerate; review items are gone forever |
 
 ## Workflow
 
-### Phase 1 — Always scan first
+### Phase 1 — Discover with diskmap (default)
 
 ```
-~/.claude/skills/macautoclean/scripts/autoclean.sh
+~/.claude/skills/macautoclean/scripts/diskmap.sh
 ```
 
-Output has 3 sections (AUTO-SAFE / NEEDS REVIEW / SKIPPED) plus per-item:
-- Module name
-- Size
-- Risk
-- **What it is and what happens if deleted** (from `MODULE_DESCRIPTION`)
+Output: every immediate child of `$HOME` (or a path you pass) sorted by size, each annotated as:
 
-Present these back to the user. Lead with the auto-safe total ("X GB freeable with no impact") and the review total ("Y MB across N items needing your decision").
+| Icon | Tier | Meaning |
+|---|---|---|
+| ✅ | auto_safe | Matches a low-risk module (cache, build artifact). Deletable in bulk with no impact. |
+| ⚠️ | review | Matches a medium/high-risk module (Downloads aged, Xcode Archives, iOS backups). Decide per-item. |
+| 🔒 | never_touch | User data, OS files, iCloud, Mail, Messages, Keychain, SSH/GPG/AWS. Protected. |
+| ❓ | unknown | No matching rule yet. Drill deeper or inspect manually. |
 
-### Phase 2 — Ask which mode
+To drill into anything:
+```
+diskmap.sh <path>          # e.g. diskmap.sh ~/Library
+diskmap.sh / --top 20      # full-disk view (some TCC denials expected)
+diskmap.sh --json          # JSON output for parsing
+```
 
-After showing the scan, ask the user one of three things:
+Present the table to the user. Lead with the 4 totals at the bottom:
+- ✅ auto-safe total → "X GB can be freed safely"
+- ⚠️ review total → "Y MB needs your decision"
+- 🔒 never-touch total → "Z GB is protected (Photos, Documents, iCloud, …)"
+- ❓ unknown total → "W GB needs exploration — want me to drill in?"
 
-| User says | Run |
-|---|---|
-| "Auto-clean / clean safe stuff / just do the safe ones" | `autoclean.sh --auto-safe --yes` |
-| "Let me review the risky ones" | `autoclean.sh --review` (interactive per-item) |
-| "Do everything" | `autoclean.sh --all` (auto-safe + interactive review) |
+### Phase 2 — Act with autoclean
 
-If unsure, default to **auto-safe only** — the no-regret choice.
-
-### Phase 3 — Smart Advisor (optional)
-
-After cleanup, offer: "Want me to look for large unused folders beyond the standard categories? Things like old AI models, stale node_modules, abandoned Python envs."
+After the user understands the landscape, ask which mode:
 
 ```
-~/.claude/skills/macautoclean/scripts/advisor.sh
+~/.claude/skills/macautoclean/scripts/autoclean.sh                          # scan modules + show 3-tier breakdown
+~/.claude/skills/macautoclean/scripts/autoclean.sh --auto-safe --yes        # delete auto-safe in bulk (recommended)
+~/.claude/skills/macautoclean/scripts/autoclean.sh --review                 # interactive per-item for medium/high
+~/.claude/skills/macautoclean/scripts/autoclean.sh --all                    # both
+```
+
+The `--review` mode walks the user through each medium/high-risk module: shows name + size + what-it-is + what-happens-if-deleted, then prompts `[d]elete / [k]eep / [q]uit`.
+
+### Phase 3 — Drill into unknowns (optional)
+
+If diskmap shows large ❓ unknown folders, suggest drilling:
+
+```
+diskmap.sh ~/.cursor       # for example, if .cursor was big and unclassified
+diskmap.sh ~/Library/Containers
+```
+
+For folders that turn out to be safe regenerable data (e.g. a new AI tool's cache), suggest adding a module to the registry — open a PR with `src/modules/<name>.sh` + whitelist entry.
+
+### Phase 4 — Smart Advisor (optional, complementary)
+
+`advisor.sh` runs 9 specific heuristics for things diskmap can't auto-classify by path alone (e.g. old node_modules in any project, stale conda envs, downloaded chat media). Use it when diskmap surfaces unknown folders that match these patterns.
+
+```
 ~/.claude/skills/macautoclean/scripts/advisor.sh --interactive
 ```
 
-Walk the user through each candidate. The advisor reports name + path + size + last access + recommendation (Safe/Review/Keep) + explanation.
-
-### Phase 4 — Schedule (optional)
+### Phase 5 — Schedule (optional)
 
 Ask: "Want auto-cleanup to run weekly without you asking?"
 
@@ -65,36 +87,35 @@ Ask: "Want auto-cleanup to run weekly without you asking?"
 
 Interactive: pick cadence (weekly/biweekly/monthly/custom) and scope. Most users want weekly + safe-only.
 
-Inspect with `schedule.sh --status`. Remove with `unschedule.sh`.
-
-### Phase 5 — Final report
+### Phase 6 — Final report
 
 - Bytes reclaimed (auto-safe + review combined)
 - Items reviewed (kept vs deleted)
 - Schedule status
-- Anything skipped (sudo/TCC) — explain how to opt in
+- Largest unknowns the user did NOT drill into — list them, suggest module contributions
 
 ## What you don't do
 
-- ❌ Never delete anything in the review tier without the user's explicit per-item OK
+- ❌ Never delete an `❓ unknown` path on the user's say-so without first showing them what it contains (drill into it)
+- ❌ Never delete anything in the review tier without explicit per-item OK
 - ❌ Never run `rm -rf` directly — all deletes go through `safe_rm` (whitelist-gated)
 - ❌ Never bypass the whitelist for any reason
 - ❌ Never `sudo` without `--with-sudo` consent
 - ❌ Never `docker volume prune` (banned at build time)
-- ❌ Never touch: `~/Documents`, `~/Desktop`, `~/Pictures`, `~/Movies`, `~/Music`, `~/Library/Mobile Documents` (iCloud), `~/Library/Mail`, `~/Library/Messages`, `~/Library/Keychains`, `~/.ssh`, `~/.gnupg`, `~/.aws`
+- ❌ Never touch the `🔒 never_touch` list: `~/Documents`, `~/Desktop`, `~/Pictures`, `~/Movies`, `~/Music`, `~/Library/Mobile Documents` (iCloud), `~/Library/Mail`, `~/Library/Messages`, `~/Library/Keychains`, `~/.ssh`, `~/.gnupg`, `~/.aws`
 - ❌ Never touch browser `Cookies`, `Login Data`, `History`, `Bookmarks`, `Preferences`
 - ❌ Never touch external/network volumes — only `/`
-- ❌ Do not promise a specific GB reclaim before scanning
-- ❌ Do not present medium/high-risk modules as "safe to delete" — they go in the REVIEW tier for a reason
+- ❌ Do not present medium/high-risk modules as "safe to delete" — they live in the REVIEW tier for a reason
 
 ## Red flags to surface
 
-1. **🚨 Auto-safe total >5 GB after the user already cleaned recently** — caches grow fast, this is normal
-2. **🚨 Single review item >5 GB** — pause, double-check
-3. **🚨 Free space <5 GB after cleanup** — suggest Advisor next (VMs, AI models)
-4. **🚨 Docker / Xcode running** — `docker prune` skips running containers; DerivedData may be locked. Suggest quitting first
-5. **⚠️ Skipped count high** — explain it's TCC/sudo, not an error
-6. **⚠️ Review tier includes iOS backups >5 GB** — backups are NOT auto-recoverable; ask twice
+1. **🚨 Unknown total >50 GB** — there's a lot of unclassified data; drill in before any delete
+2. **🚨 Single unknown folder >10 GB** — almost always worth investigating (VMs, AI models, abandoned project deps)
+3. **🚨 Single review item >5 GB** — pause, double-check the user really wants it deleted
+4. **🚨 Free space <5 GB after cleanup** — suggest diskmap drill into ❓ unknowns
+5. **🚨 Docker / Xcode running** — `docker prune` skips running containers; DerivedData may be locked. Suggest quitting first
+6. **⚠️ TCC permission denied on diskmap** — show "true size ≥ X GB" line and tell user they can grant Full Disk Access in System Settings if they want true totals
+7. **⚠️ Review tier includes iOS backups >5 GB** — backups are NOT auto-recoverable; ask twice
 
 ## References
 
