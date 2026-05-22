@@ -19,12 +19,10 @@ warn() { printf '[%s] WARN: %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG_FILE" 
 err()  { printf '[%s] ERROR: %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG_FILE" >&2; }
 
 path_bytes() {
-  local p="$1"
-  if [[ -e "$p" ]]; then
-    /usr/bin/du -sk "$p" 2>/dev/null | awk '{print $1*1024}'
-  else
-    echo 0
-  fi
+  local p="$1" out
+  [[ -e "$p" ]] || { echo 0; return 0; }
+  out=$(/usr/bin/du -sk "$p" 2>/dev/null | awk 'NR==1{print $1*1024; exit}')
+  echo "${out:-0}"
 }
 
 format_bytes() {

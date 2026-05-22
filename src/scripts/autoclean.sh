@@ -1,130 +1,215 @@
 #!/usr/bin/env bash
-# autoclean.sh — master orchestrator for MacAutoClean.
+# autoclean.sh — master orchestrator with explicit SCAN-vs-CLEAN separation.
+#
+# Two distinct concepts:
+#   SCAN   — one-shot, read-only, permission-agnostic. Reports every module classified as:
+#              • auto_safe : low-risk caches/build artifacts (regenerable, no impact)
+#              • review    : medium/high risk (you decide per-item)
+#              • skipped   : sudo-required / TCC-denied / tool missing
+#   CLEAN  — auto-cleans auto_safe in one shot; review tier is per-module interactive.
 #
 # Usage:
-#   autoclean.sh                              # scan only
-#   autoclean.sh --execute                    # scan, then interactive prompt + execute
-#   autoclean.sh --execute --yes              # skip prompt (used by SKILL.md after conversational consent)
-#   autoclean.sh --execute --yes --scope dev,browser
-#   autoclean.sh --execute --yes --with-sudo  # also run sudo-required modules
-#   autoclean.sh --execute --dry-run --yes    # rehearsal
-#   autoclean.sh --notify silent|notify|claude
+#   autoclean.sh                                # scan only, show 3-tier breakdown
+#   autoclean.sh --execute --auto-safe --yes    # clean only auto-safe (recommended)
+#   autoclean.sh --execute --review             # interactive per-item for medium/high risk
+#   autoclean.sh --execute --all --yes          # both tiers in one go (>5GB gate applies)
+#   autoclean.sh --json                         # raw JSON (scan only)
 
-set -euo pipefail
+set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/lib.sh"
 
 EXECUTE=0
 YES=0
-SCOPE_FILTER=""
 WITH_SUDO=0
+SCOPE_FILTER=""
 NOTIFY_MODE=""
-SCOPE_NEXT=0
-NOTIFY_NEXT=0
+TIER=""
+JSON_ONLY=0
+GATE_GB=5
 
-GATE_GB=5  # confirmation gate (GB) when reclaim exceeds this and --yes not set
-
-usage() {
-  sed -n '2,12p' "$0"
-}
-
+SCOPE_NEXT=0; NOTIFY_NEXT=0
 for arg in "$@"; do
-  if [[ "$SCOPE_NEXT" -eq 1 ]]; then SCOPE_FILTER="$arg"; SCOPE_NEXT=0; continue; fi
+  if [[ "$SCOPE_NEXT"  -eq 1 ]]; then SCOPE_FILTER="$arg"; SCOPE_NEXT=0; continue; fi
   if [[ "$NOTIFY_NEXT" -eq 1 ]]; then NOTIFY_MODE="$arg"; NOTIFY_NEXT=0; continue; fi
   case "$arg" in
     --execute) EXECUTE=1 ;;
     --yes|-y) YES=1 ;;
+    --with-sudo) WITH_SUDO=1 ;;
     --scope) SCOPE_NEXT=1 ;;
     --scope=*) SCOPE_FILTER="${arg#--scope=}" ;;
-    --with-sudo) WITH_SUDO=1 ;;
-    --dry-run) export DRY_RUN=1 ;;
     --notify) NOTIFY_NEXT=1 ;;
     --notify=*) NOTIFY_MODE="${arg#--notify=}" ;;
-    -h|--help) usage; exit 0 ;;
-    *) err "unknown arg: $arg"; usage; exit 2 ;;
+    --auto-safe) TIER="auto_safe"; EXECUTE=1 ;;
+    --review)    TIER="review"    ; EXECUTE=1 ;;
+    --all)       TIER="all"       ; EXECUTE=1 ;;
+    --json) JSON_ONLY=1 ;;
+    --dry-run) export DRY_RUN=1 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+    *) err "unknown arg: $arg"; exit 2 ;;
   esac
 done
 
-# ---- Step 1: scan ----
-log "═══ STEP 1: SCAN ═══"
+[[ $JSON_ONLY -eq 0 ]] && log "═══ STEP 1: SCAN (read-only) ═══"
 SCAN_OUT="$(mktemp)"
-scan_args=()
+scan_args=( --json )
 [[ -n "$SCOPE_FILTER" ]] && scan_args+=( --scope "$SCOPE_FILTER" )
-scan_args+=( --json )
-"$SCRIPT_DIR/scan.sh" "${scan_args[@]}" > "$SCAN_OUT"
+"$SCRIPT_DIR/scan.sh" "${scan_args[@]}" > "$SCAN_OUT" 2>/dev/null || true
 
-# Pull total bytes from _summary line. We don't depend on jq.
-TOTAL_BYTES="$(awk -F'"bytes_total":' '/"_summary"/{split($2, a, ","); gsub(/[^0-9]/, "", a[1]); print a[1]; exit}' "$SCAN_OUT")"
-TOTAL_BYTES="${TOTAL_BYTES:-0}"
-TOTAL_HUMAN="$(format_bytes "$TOTAL_BYTES")"
-DISK_FREE="$(disk_free_bytes)"
-DISK_PCT="$(disk_used_pct)"
-
-# Human-friendly summary table (one row per module with bytes > 0).
-echo ""
-printf "  %-32s %-9s %-7s %s\n" "MODULE" "SIZE" "RISK" "NOTE"
-printf "  %-32s %-9s %-7s %s\n" "------" "----" "----" "----"
-awk -F'[:,]' '
-  /"module":/ {
-    mod=""; nm=""; ris=""; hum=""; req=""
-    for (i=1; i<=NF; i++) {
-      if ($i ~ /"name"/)         { gsub(/[ "]+/, "", $(i+1)); nm=$(i+1); }
-      if ($i ~ /"risk"/)         { gsub(/[ "]+/, "", $(i+1)); ris=$(i+1); }
-      if ($i ~ /"human"/)        { gsub(/[ "]+/, "", $(i+1)); hum=$(i+1); }
-      if ($i ~ /"requires_sudo"/){ gsub(/[ "]+/, "", $(i+1)); req=$(i+1); }
-      if ($i ~ /"module"/)       { gsub(/[ "]+/, "", $(i+1)); mod=$(i+1); }
-    }
-    if (mod ~ /^_/) next
-    if (hum == "" || hum == "0B") next
-    if (nm == "")  nm = mod
-    note = (req == "1") ? "(sudo)" : ""
-    printf "  %-32.32s %-9s %-7s %s\n", nm, hum, ris, note
-  }
-' "$SCAN_OUT"
-echo ""
-log "Total reclaimable: $TOTAL_HUMAN | Disk free: $(format_bytes "$DISK_FREE") | Used: ${DISK_PCT}%"
-
-if [[ "$EXECUTE" != "1" ]]; then
-  log "Scan complete. Use --execute to reclaim."
+if [[ $JSON_ONLY -eq 1 ]]; then
+  cat "$SCAN_OUT"
   rm -f "$SCAN_OUT"
   exit 0
 fi
 
-# ---- Confirmation gate ----
-GATE_BYTES=$((GATE_GB * 1024 * 1024 * 1024))
-if [[ "$YES" != "1" && "$TOTAL_BYTES" -gt "$GATE_BYTES" ]]; then
-  log "⚠  Scan projects > ${GATE_GB} GB reclaim. Confirm to proceed."
-  echo -n "Proceed? [yes/no] " >&2
-  read -r confirm
-  case "$confirm" in y|yes|Y|YES) ;; *) log "Aborted by user."; rm -f "$SCAN_OUT"; exit 0 ;; esac
-fi
+SUMMARY="$(grep '"_summary"' "$SCAN_OUT" | head -1)"
+extract_str() { echo "$SUMMARY" | sed -n "s/.*\"$1\":\"\([^\"]*\)\".*/\1/p" | head -1; }
+extract_num() { echo "$SUMMARY" | sed -n "s/.*\"$1\":\([0-9]*\).*/\1/p" | head -1; }
+AUTO_SAFE_BYTES=$(extract_num auto_safe_bytes); AUTO_SAFE_BYTES="${AUTO_SAFE_BYTES:-0}"
+AUTO_SAFE_HUMAN=$(extract_str auto_safe_human); AUTO_SAFE_HUMAN="${AUTO_SAFE_HUMAN:-0 B}"
+AUTO_SAFE_COUNT=$(extract_num auto_safe_count); AUTO_SAFE_COUNT="${AUTO_SAFE_COUNT:-0}"
+REVIEW_BYTES=$(extract_num review_bytes); REVIEW_BYTES="${REVIEW_BYTES:-0}"
+REVIEW_HUMAN=$(extract_str review_human); REVIEW_HUMAN="${REVIEW_HUMAN:-0 B}"
+REVIEW_COUNT=$(extract_num review_count); REVIEW_COUNT="${REVIEW_COUNT:-0}"
+SKIPPED_COUNT=$(extract_num skipped_count); SKIPPED_COUNT="${SKIPPED_COUNT:-0}"
+DISK_FREE=$(extract_num disk_free); DISK_FREE="${DISK_FREE:-0}"
 
-# ---- Step 2: execute ----
-log "═══ STEP 2: EXECUTE ═══"
-exec_args=( --yes )
-[[ -n "$SCOPE_FILTER" ]] && exec_args+=( --scope "$SCOPE_FILTER" )
-[[ "$WITH_SUDO" -eq 1 ]] && exec_args+=( --with-sudo )
-[[ "${DRY_RUN:-0}" == "1" ]] && exec_args+=( --dry-run )
-
-EXEC_OUT="$(mktemp)"
-"$SCRIPT_DIR/execute.sh" "${exec_args[@]}" > "$EXEC_OUT"
-
-TOTAL_FREED="$(awk -F'"bytes_freed":' '/"_total"/{split($2, a, ","); gsub(/[^0-9]/, "", a[1]); print a[1]; exit}' "$EXEC_OUT")"
-TOTAL_FREED="${TOTAL_FREED:-0}"
+format_section() {
+  local tier_label="$1"
+  printf "\n  %-32s %-10s %-8s %s\n" "MODULE" "SIZE" "RISK" "WHAT IT IS / WHAT HAPPENS IF DELETED"
+  printf "  %-32s %-10s %-8s %s\n" "------" "----" "----" "------------------------------------"
+  grep "\"tier\":\"$tier_label\"" "$SCAN_OUT" | while IFS= read -r line; do
+    name=$(echo "$line" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
+    human=$(echo "$line" | sed -n 's/.*"human":"\([^"]*\)".*/\1/p')
+    risk=$(echo "$line" | sed -n 's/.*"risk":"\([^"]*\)".*/\1/p')
+    desc=$(echo "$line" | sed -n 's/.*"description":"\([^"]*\)".*/\1/p')
+    bytes=$(echo "$line" | sed -n 's/.*"bytes":\([0-9]*\).*/\1/p')
+    bytes="${bytes:-0}"
+    [[ "$bytes" -eq 0 ]] && continue
+    short_name="${name:0:30}"
+    short_desc="${desc:0:70}"
+    printf "  %-32s %-10s %-8s %s\n" "$short_name" "$human" "$risk" "$short_desc"
+  done
+}
 
 echo ""
-log "═══ DONE ═══"
-log "Reclaimed: $(format_bytes "$TOTAL_FREED")"
-log "Disk free now: $(format_bytes "$(disk_free_bytes)") (was $(format_bytes "$DISK_FREE"))"
-log "Used now: $(disk_used_pct)% (was ${DISK_PCT}%)"
+echo "╔══════════════════════════════════════════════════════════════════════════════╗"
+echo "║                       MacAutoClean — SCAN RESULTS                            ║"
+echo "╚══════════════════════════════════════════════════════════════════════════════╝"
 
-# ---- Notification ----
-case "$NOTIFY_MODE" in
-  notify|silent_notify|claude)
-    if [[ -x "$SCRIPT_DIR/notify.sh" ]]; then
-      "$SCRIPT_DIR/notify.sh" "MacAutoClean reclaimed $(format_bytes "$TOTAL_FREED")" "Disk free: $(format_bytes "$(disk_free_bytes)")" || true
-    fi
-    ;;
-esac
+echo ""
+echo "▼ AUTO-SAFE  ($AUTO_SAFE_COUNT modules, $AUTO_SAFE_HUMAN)  — caches & build artifacts, regenerable, no user impact"
+format_section "auto_safe"
+
+echo ""
+echo "▼ NEEDS YOUR REVIEW  ($REVIEW_COUNT modules, $REVIEW_HUMAN)  — medium/high risk, decide per item"
+if [[ "$REVIEW_COUNT" -eq 0 ]]; then
+  echo "  (none)"
+else
+  format_section "review"
+fi
+
+echo ""
+echo "▼ SKIPPED  ($SKIPPED_COUNT modules)  — need sudo or permission denied"
+grep '"tier":"skipped"' "$SCAN_OUT" | while IFS= read -r line; do
+  name=$(echo "$line" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
+  reason=$(echo "$line" | sed -n 's/.*"reason":"\([^"]*\)".*/\1/p')
+  module=$(echo "$line" | sed -n 's/.*"module":"\([^"]*\)".*/\1/p')
+  printf "  %-32s %s\n" "${name:-$module}" "$reason"
+done
+
+echo ""
+echo "──────────────────────────────────────────────────────────────────────────────"
+TOTAL=$((AUTO_SAFE_BYTES + REVIEW_BYTES))
+printf "  Total reclaimable: %-10s  |  Disk free now: %-10s\n" \
+  "$(format_bytes "$TOTAL")" "$(format_bytes "$DISK_FREE")"
+echo "──────────────────────────────────────────────────────────────────────────────"
+
+if [[ $EXECUTE -ne 1 ]]; then
+  echo ""
+  echo "Next steps (choose one):"
+  echo "  1. AUTO-CLEAN safe items (recommended, no impact):"
+  echo "       $0 --auto-safe --yes"
+  echo "  2. INTERACTIVE review of medium/high-risk items (one-by-one decision):"
+  echo "       $0 --review"
+  echo "  3. BOTH (auto-safe + interactive review):"
+  echo "       $0 --all"
+  echo ""
+  rm -f "$SCAN_OUT"
+  exit 0
+fi
+
+echo ""
+log "═══ STEP 2: CLEAN (tier=$TIER) ═══"
+
+need_gate=0
+if [[ "$TIER" == "all" && $YES -ne 1 ]]; then need_gate=1; fi
+if [[ "$TIER" == "auto_safe" && $YES -ne 1 ]]; then
+  if [[ "$AUTO_SAFE_BYTES" -gt $((GATE_GB * 1024 * 1024 * 1024)) ]]; then need_gate=1; fi
+fi
+if [[ $need_gate -eq 1 ]]; then
+  echo "About to clean $AUTO_SAFE_HUMAN auto-safe + $REVIEW_HUMAN review."
+  echo "Pass --yes to skip this prompt."
+  echo -n "Proceed? (yes/no): "
+  read -r ans
+  case "$ans" in y|yes|Y|YES) ;; *) log "Cancelled."; rm -f "$SCAN_OUT"; exit 1 ;; esac
+fi
+
+EXEC_OUT="$(mktemp)"
+
+if [[ "$TIER" == "auto_safe" || "$TIER" == "all" ]]; then
+  log "Running auto-safe modules ($AUTO_SAFE_COUNT modules)..."
+  exec_args=( --yes --tier auto_safe )
+  [[ -n "$SCOPE_FILTER" ]] && exec_args+=( --scope "$SCOPE_FILTER" )
+  [[ "$WITH_SUDO" -eq 1 ]] && exec_args+=( --with-sudo )
+  "$SCRIPT_DIR/execute.sh" "${exec_args[@]}" >> "$EXEC_OUT" 2>&1 || true
+fi
+
+if [[ "$TIER" == "review" || "$TIER" == "all" ]]; then
+  if [[ "$REVIEW_COUNT" -eq 0 ]]; then
+    log "No review-tier modules with data; skipping."
+  else
+    echo ""
+    log "═══ Interactive review (medium/high risk) ═══"
+    echo "For each module: [d]elete  [k]eep (skip)  [q]uit review"
+    echo ""
+    while IFS= read -r line; do
+      name=$(echo "$line" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
+      human=$(echo "$line" | sed -n 's/.*"human":"\([^"]*\)".*/\1/p')
+      risk=$(echo "$line" | sed -n 's/.*"risk":"\([^"]*\)".*/\1/p')
+      desc=$(echo "$line" | sed -n 's/.*"description":"\([^"]*\)".*/\1/p')
+      mod=$(echo "$line" | sed -n 's/.*"module":"\([^"]*\)".*/\1/p')
+      bytes=$(echo "$line" | sed -n 's/.*"bytes":\([0-9]*\).*/\1/p')
+      [[ "${bytes:-0}" -eq 0 ]] && continue
+
+      echo "─────────────────────────────────────────────────────────────────────"
+      echo "  $name  ($human, risk=$risk)"
+      echo "  → $desc"
+      echo -n "  [d]elete / [k]eep / [q]uit ? "
+      read -r answer </dev/tty
+      case "$answer" in
+        d|D|delete)
+          log "Deleting $mod..."
+          "$SCRIPT_DIR/execute.sh" --yes --module "$mod" --tier all >> "$EXEC_OUT" 2>&1 || true
+          ;;
+        q|Q|quit) log "Review aborted by user."; break ;;
+        *) log "Kept (skipped) $mod." ;;
+      esac
+    done < <(grep '"tier":"review"' "$SCAN_OUT")
+  fi
+fi
+
+echo ""
+log "═══ FINAL REPORT ═══"
+TOTAL_FREED=$(grep '"_total"' "$EXEC_OUT" | sed -n 's/.*"bytes_freed":\([0-9]*\).*/\1/p' | head -1)
+TOTAL_FREED="${TOTAL_FREED:-0}"
+DISK_AFTER=$(disk_free_bytes)
+log "Reclaimed: $(format_bytes "$TOTAL_FREED")"
+log "Disk free: $(format_bytes "$DISK_FREE") → $(format_bytes "$DISK_AFTER")"
+
+if [[ "$NOTIFY_MODE" == "notify" ]] && command -v osascript >/dev/null 2>&1; then
+  osascript -e "display notification \"Reclaimed $(format_bytes "$TOTAL_FREED")\" with title \"MacAutoClean\"" 2>/dev/null || true
+fi
 
 rm -f "$SCAN_OUT" "$EXEC_OUT"
+exit 0
