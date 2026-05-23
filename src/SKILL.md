@@ -124,9 +124,23 @@ Interactive: pick cadence (weekly/biweekly/monthly/custom) and scope. Most users
 6. **⚠️ TCC permission denied on diskmap** — show "true size ≥ X GB" line and tell user they can grant Full Disk Access in System Settings if they want true totals
 7. **⚠️ Review tier includes iOS backups >5 GB** — backups are NOT auto-recoverable; ask twice
 
+## Language / i18n
+
+All scripts auto-detect language from `$LANG` (`zh*` → Chinese, anything else → English). If the user is conversing with you in Chinese but their shell `$LANG` is `en_US.UTF-8` (common on macOS), the disk report will come out in English — which is wrong.
+
+**Fix**: before invoking any script, export `MAC_AUTOCLEAN_LANG` to match the conversation language. This always wins over `$LANG`:
+
+```bash
+MAC_AUTOCLEAN_LANG=zh ~/.claude/skills/macautoclean/scripts/autoclean.sh
+MAC_AUTOCLEAN_LANG=en ~/.claude/skills/macautoclean/scripts/diskmap.sh
+```
+
+The override flows into every downstream script via `MAC_LANG` (exported by `lib.sh`). Translation dictionary lives in [`references/i18n.sh`](references/i18n.sh) — keyed on English source strings, gettext-style. Adding a string: wrap with `$(i18n "English literal")` at the call site, add a case branch under `_i18n_zh`.
+
 ## References
 
 - [whitelist.txt](references/whitelist.txt) — paths `safe_rm` is allowed to touch
 - [whitelist.md](references/whitelist.md) — whitelist explained in prose
 - [safety-rules.md](references/safety-rules.md) — invariants every script enforces
 - [cleanup-catalog.md](references/cleanup-catalog.md) — every module's purpose, size, recovery
+- [i18n.sh](references/i18n.sh) — translation dictionary (add a new language = new `_i18n_<code>` function + dispatch branch)

@@ -11,43 +11,31 @@ _LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${MODULES_DIR:=$_LIB_DIR/../modules}"
 : "${HEURISTICS_DIR:=$_LIB_DIR/../advisor-heuristics}"
 : "${TEMPLATES_DIR:=$_LIB_DIR/../templates}"
+: "${I18N_FILE:=$_LIB_DIR/../references/i18n.sh}"
 
 mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
 
 
 # ---- i18n ----
+# Resolution order: MAC_AUTOCLEAN_LANG (explicit, takes precedence) > $LANG / $LC_ALL / $LC_CTYPE.
+# Claude Code sets MAC_AUTOCLEAN_LANG when it detects the conversation language
+# differs from the shell's locale.
 MAC_LANG="en"
-case "${LANG:-${LC_ALL:-${LC_CTYPE:-}}}" in
+case "${MAC_AUTOCLEAN_LANG:-${LANG:-${LC_ALL:-${LC_CTYPE:-}}}}" in
   zh*|*ZH*) MAC_LANG="zh" ;;
 esac
+export MAC_LANG
 
-# tr <english-key> — returns localized version (falls back to key if no translation)
-tr() {
-  local k="$1"
-  if [[ "$MAC_LANG" != "zh" ]]; then echo "$k"; return; fi
-  case "$k" in
-    "Disk map") echo "磁盘地图" ;;
-    "Threshold ≥") echo "阈值 ≥" ;;
-    "auto-drilled to specific classifiable items") echo "已自动深入到可分类的具体项目" ;;
-    "some paths denied by macOS TCC — true totals may be higher") echo "部分路径被 macOS TCC 拒绝 — 实际总量可能更大" ;;
-    "AUTO-SAFE — delete now") echo "安全清理 — 立即可删" ;;
-    "NEEDS REVIEW — your call") echo "需要审核 — 你来决定" ;;
-    "NEVER-TOUCH — protected (info only)") echo "受保护 — 不动（仅供参考）" ;;
-    "no impact, regenerable") echo "无影响，可重建" ;;
-    "decide per item") echo "逐项决定" ;;
-    "user/system data") echo "用户/系统数据" ;;
-    "SIZE") echo "大小" ;;
-    "WHAT IT IS") echo "是什么" ;;
-    "WHERE") echo "位置" ;;
-    "items") echo "项" ;;
-    "Auto-safe (delete):") echo "安全清理（可直接删）：" ;;
-    "Review (your call):") echo "需要审核（你决定）：" ;;
-    "Never-touch (info):") echo "受保护（仅参考）：" ;;
-    "Walking") echo "正在扫描" ;;
-    "this can take ~30s for a full home dir") echo "全 home 目录约 30 秒" ;;
-    *) echo "$k" ;;
-  esac
-}
+# Load translation dictionary. Defines i18n() — keyed on English source strings.
+# If the dictionary file is missing for any reason, install a passthrough so
+# scripts still produce readable (English) output instead of failing.
+if [[ -f "$I18N_FILE" ]]; then
+  # shellcheck disable=SC1090
+  . "$I18N_FILE"
+fi
+if ! declare -f i18n >/dev/null 2>&1; then
+  i18n() { printf '%s' "$1"; }
+fi
 
 log()  { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG_FILE" >&2; }
 warn() { printf '[%s] WARN: %s\n' "$(date +%H:%M:%S)" "$*" | tee -a "$LOG_FILE" >&2; }
@@ -68,6 +56,24 @@ format_bytes() {
     if (i==1) printf "%d %s\n", b, u[i]
     else printf "%.1f %s\n", b, u[i]
   }'
+}
+
+# padcjk <text> <cell-width> — right-pads <text> with spaces to <cell-width>
+# DISPLAY cells (East-Asian Wide/Full chars count as 2). printf's "%-Ns"
+# pads by byte count, which mis-aligns columns when localized strings
+# contain CJK. Falls back to byte-padding if python3 is unavailable.
+padcjk() {
+  local txt="$1" width="$2"
+  if command -v /usr/bin/python3 >/dev/null 2>&1; then
+    /usr/bin/python3 -c '
+import sys, unicodedata
+s, w = sys.argv[1], int(sys.argv[2])
+cells = sum(2 if unicodedata.east_asian_width(c) in ("W","F") else 1 for c in s)
+sys.stdout.write(s + " "*(max(0, w-cells)))
+' "$txt" "$width"
+  else
+    printf '%-*s' "$width" "$txt"
+  fi
 }
 
 is_whitelisted() {

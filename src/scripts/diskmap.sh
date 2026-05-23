@@ -72,7 +72,7 @@ done
 
 DU_FILE="$(mktemp)"
 DU_ERR="$(mktemp)"
-[[ $JSON -eq 0 ]] && log "$(tr "Walking") $START ($(tr "this can take ~30s for a full home dir"))..."
+[[ $JSON -eq 0 ]] && log "$(i18n "Walking") $START ($(i18n "this can take ~30s for a full home dir"))..."
 /usr/bin/du -k "$START" 2>"$DU_ERR" > "$DU_FILE" || true
 PERM_DENIED=0
 if grep -qi "permission denied\|operation not permitted" "$DU_ERR" 2>/dev/null; then
@@ -282,10 +282,10 @@ fi
 echo ""
 echo "╔══════════════════════════════════════════════════════════════════════════════╗"
 pad_banner() { python3 -c "import sys,unicodedata; s=sys.argv[1]; w=sum(2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in s); print(s + ' '*(max(0,76-w)) + '║')" "$1"; }
-printf "║  %s\n" "$(pad_banner "$(tr "Disk map")  —  $START")"
-printf "║  %s\n" "$(pad_banner "$(tr "Threshold ≥") $(format_bytes "$((THRESHOLD_KB*1024))")  •  $(tr "auto-drilled to specific classifiable items")")"
+printf "║  %s\n" "$(pad_banner "$(i18n "Disk map")  —  $START")"
+printf "║  %s\n" "$(pad_banner "$(i18n "Threshold ≥") $(format_bytes "$((THRESHOLD_KB*1024))")  •  $(i18n "auto-drilled to specific classifiable items")")"
 if [[ $PERM_DENIED -eq 1 ]]; then
-  printf "║  ⚠️  $(tr "some paths denied by macOS TCC — true totals may be higher")              ║\n"
+  printf "║  ⚠️  $(i18n "some paths denied by macOS TCC — true totals may be higher")              ║\n"
 fi
 echo "╚══════════════════════════════════════════════════════════════════════════════╝"
 
@@ -312,16 +312,16 @@ print(s + ' '*(max(0,38-w)))" "$nm")
   done < "$SORTED"
   [[ $count -eq 0 ]] && { rm -f "$rows"; return; }
   echo ""
-  printf "%s  %s  (%d $(tr "items"), %s)  — %s\n" "$icon" "$label" "$count" "$(format_bytes "$total")" "$tagline"
-  printf "  %-9s  %-38s  %s\n" "$(tr "SIZE")" "$(tr "WHAT IT IS")" "$(tr "WHERE")"
+  printf "%s  %s  (%d $(i18n "items"), %s)  — %s\n" "$icon" "$label" "$count" "$(format_bytes "$total")" "$tagline"
+  printf "  %-9s  %-38s  %s\n" "$(i18n "SIZE")" "$(i18n "WHAT IT IS")" "$(i18n "WHERE")"
   echo "  ─────────  ──────────────────────────────────────  ──────────────────────────────"
   cat "$rows"
   rm -f "$rows"
 }
 
-print_section "auto_safe"   "$(tr "AUTO-SAFE — delete now")"     "✅" "$(tr "no impact, regenerable")"
-print_section "review"      "$(tr "NEEDS REVIEW — your call")"   "⚠️ " "$(tr "decide per item")"
-[[ $HIDE_NEVER -eq 1 ]] || print_section "never_touch" "$(tr "NEVER-TOUCH — protected (info only)")" "🔒" "$(tr "user/system data")"
+print_section "auto_safe"   "$(i18n "AUTO-SAFE — delete now")"     "✅" "$(i18n "no impact, regenerable")"
+print_section "review"      "$(i18n "NEEDS REVIEW — your call")"   "⚠️ " "$(i18n "decide per item")"
+[[ $HIDE_NEVER -eq 1 ]] || print_section "never_touch" "$(i18n "NEVER-TOUCH — protected (info only)")" "🔒" "$(i18n "user/system data")"
 
 AS=$(awk -F'|' '$1=="auto_safe"{s+=$2} END{print s+0}' "$RESULT_FILE")
 RV=$(awk -F'|' '$1=="review"{s+=$2} END{print s+0}' "$RESULT_FILE")
@@ -329,9 +329,9 @@ NT=$(awk -F'|' '$1=="never_touch"{s+=$2} END{print s+0}' "$RESULT_FILE")
 
 echo ""
 echo "══════════════════════════════════════════════════════════════════════════════════"
-printf "  ✅ $(tr "Auto-safe (delete):")   %s\n" "$(format_bytes "$AS")"
-printf "  ⚠️  $(tr "Review (your call):")   %s\n" "$(format_bytes "$RV")"
-printf "  🔒 $(tr "Never-touch (info):")   %s\n" "$(format_bytes "$NT")"
+printf "  ✅ $(i18n "Auto-safe (delete):")   %s\n" "$(format_bytes "$AS")"
+printf "  ⚠️  $(i18n "Review (your call):")   %s\n" "$(format_bytes "$RV")"
+printf "  🔒 $(i18n "Never-touch (info):")   %s\n" "$(format_bytes "$NT")"
 echo "══════════════════════════════════════════════════════════════════════════════════"
 
 rm -f "$REG_FILE" "$DU_FILE" "$DU_ERR" "$RESULT_FILE" "$SORTED"

@@ -42,38 +42,38 @@ done
 # ---- Status mode ----
 if [[ "$ACTION" == "status" ]]; then
   if [[ -f "$AGENT_PATH" ]]; then
-    echo "✓ Scheduled. LaunchAgent: $AGENT_PATH"
+    printf "$(i18n '✓ Scheduled. LaunchAgent: %s')\n" "$AGENT_PATH"
     if launchctl list 2>/dev/null | grep -q "$LABEL"; then
-      echo "  State: loaded"
+      echo "$(i18n '  State: loaded')"
     else
-      echo "  State: NOT loaded (try: launchctl bootstrap gui/$UID \"$AGENT_PATH\")"
+      printf "$(i18n '  State: NOT loaded (try: launchctl bootstrap gui/%s "%s")')\n" "$UID" "$AGENT_PATH"
     fi
-    echo "  Log:   $LOG_PATH"
+    printf "$(i18n '  Log:   %s')\n" "$LOG_PATH"
   else
-    echo "Not scheduled."
+    echo "$(i18n 'Not scheduled.')"
   fi
   exit 0
 fi
 
 if [[ "$ACTION" == "next" ]]; then
   if [[ -f "$AGENT_PATH" ]]; then
-    /usr/bin/plutil -extract StartCalendarInterval xml1 -o - "$AGENT_PATH" 2>/dev/null || echo "(no calendar set)"
+    /usr/bin/plutil -extract StartCalendarInterval xml1 -o - "$AGENT_PATH" 2>/dev/null || echo "$(i18n '(no calendar set)')"
   else
-    echo "Not scheduled."
+    echo "$(i18n 'Not scheduled.')"
   fi
   exit 0
 fi
 
 # ---- Interactive (or preset) setup ----
-echo "MacAutoClean — Scheduled Auto-Run Setup"
+echo "$(i18n 'MacAutoClean — Scheduled Auto-Run Setup')"
 echo ""
 
 if [[ -z "$PRESET" ]]; then
-  echo "How often should MacAutoClean run?"
-  echo "  1) Weekly (Sunday 3 AM)"
-  echo "  2) Every 2 weeks (1st and 15th of the month, 3 AM)"
-  echo "  3) Monthly (1st of the month, 3 AM)"
-  echo "  4) Custom (you'll provide weekday + hour)"
+  echo "$(i18n 'How often should MacAutoClean run?')"
+  echo "$(i18n '  1) Weekly (Sunday 3 AM)')"
+  echo "$(i18n '  2) Every 2 weeks (1st and 15th of the month, 3 AM)')"
+  echo "$(i18n '  3) Monthly (1st of the month, 3 AM)')"
+  echo "$(i18n "  4) Custom (you'll provide weekday + hour)")"
   echo -n "> "
   read -r choice
   case "$choice" in
@@ -126,8 +126,8 @@ XML
 XML
       ;;
     custom)
-      echo -n "  Weekday (0=Sun, 1=Mon, ... 6=Sat): " >&2; read -r wd
-      echo -n "  Hour (0-23, e.g. 3 for 3 AM): " >&2; read -r hr
+      printf "%s" "$(i18n '  Weekday (0=Sun, 1=Mon, ... 6=Sat): ')" >&2; read -r wd
+      printf "%s" "$(i18n '  Hour (0-23, e.g. 3 for 3 AM): ')" >&2; read -r hr
       cat <<XML
   <key>StartCalendarInterval</key>
   <dict>
@@ -146,10 +146,10 @@ SCOPE="system,dev,browser"
 NOTIFY_MODE="notify"
 if [[ -z "${PRESET_AUTO:-}" && "$DRY" -eq 0 ]]; then
   echo ""
-  echo "What should each run do?"
-  echo "  1) Clean safe categories (caches, logs, trash) + send notification  [recommended]"
-  echo "  2) Clean all 51 modules + send notification"
-  echo "  3) Notify only (do not clean automatically — open Claude when ready)"
+  echo "$(i18n 'What should each run do?')"
+  echo "$(i18n '  1) Clean safe categories (caches, logs, trash) + send notification  [recommended]')"
+  echo "$(i18n '  2) Clean all 51 modules + send notification')"
+  echo "$(i18n '  3) Notify only (do not clean automatically — open Claude when ready)')"
   echo -n "> "
   read -r scope_choice
   case "$scope_choice" in
@@ -207,8 +207,8 @@ if ! launchctl bootstrap "gui/$UID" "$AGENT_PATH" 2>/dev/null; then
 fi
 
 echo ""
-echo "✓ Scheduled: $PRESET ($SCOPE)"
-echo "  Agent:  $AGENT_PATH"
-echo "  Log:    $LOG_PATH"
-echo "  Status: $SCRIPT_DIR/schedule.sh --status"
-echo "  Stop:   $SCRIPT_DIR/unschedule.sh"
+printf "$(i18n '✓ Scheduled: %s (%s)')\n" "$PRESET" "$SCOPE"
+printf "$(i18n '  Agent:  %s')\n" "$AGENT_PATH"
+printf "$(i18n '  Log:    %s')\n" "$LOG_PATH"
+printf "$(i18n '  Status: %s')\n" "$SCRIPT_DIR/schedule.sh --status"
+printf "$(i18n '  Stop:   %s')\n" "$SCRIPT_DIR/unschedule.sh"

@@ -50,7 +50,7 @@ for arg in "$@"; do
   esac
 done
 
-[[ $JSON_ONLY -eq 0 ]] && log "═══ STEP 1: SCAN (read-only) ═══"
+[[ $JSON_ONLY -eq 0 ]] && log "═══ $(i18n 'STEP 1: SCAN (read-only)') ═══"
 SCAN_OUT="$(mktemp)"
 scan_args=( --json )
 [[ -n "$SCOPE_FILTER" ]] && scan_args+=( --scope "$SCOPE_FILTER" )
@@ -76,7 +76,11 @@ DISK_FREE=$(extract_num disk_free); DISK_FREE="${DISK_FREE:-0}"
 
 format_section() {
   local tier_label="$1"
-  printf "\n  %-32s %-10s %-8s %s\n" "MODULE" "SIZE" "RISK" "WHAT IT IS / WHAT HAPPENS IF DELETED"
+  printf "\n  %s %s %s %s\n" \
+    "$(padcjk "$(i18n 'MODULE')" 32)" \
+    "$(padcjk "$(i18n 'SIZE')"   10)" \
+    "$(padcjk "$(i18n 'RISK')"   8)"  \
+    "$(i18n 'WHAT IT IS / WHAT HAPPENS IF DELETED')"
   printf "  %-32s %-10s %-8s %s\n" "------" "----" "----" "------------------------------------"
   grep "\"tier\":\"$tier_label\"" "$SCAN_OUT" | while IFS= read -r line; do
     name=$(echo "$line" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
@@ -94,23 +98,28 @@ format_section() {
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════════════════════╗"
-echo "║                       MacAutoClean — SCAN RESULTS                            ║"
+printf "║  %s\n" "$(i18n 'MacAutoClean — SCAN RESULTS')"
 echo "╚══════════════════════════════════════════════════════════════════════════════╝"
 
 echo ""
-echo "▼ AUTO-SAFE  ($AUTO_SAFE_COUNT modules, $AUTO_SAFE_HUMAN)  — caches & build artifacts, regenerable, no user impact"
+printf "▼ %s  (%s %s, %s)  — %s\n" \
+  "$(i18n 'AUTO-SAFE')" "$AUTO_SAFE_COUNT" "$(i18n 'modules')" "$AUTO_SAFE_HUMAN" \
+  "$(i18n 'caches & build artifacts, regenerable, no user impact')"
 format_section "auto_safe"
 
 echo ""
-echo "▼ NEEDS YOUR REVIEW  ($REVIEW_COUNT modules, $REVIEW_HUMAN)  — medium/high risk, decide per item"
+printf "▼ %s  (%s %s, %s)  — %s\n" \
+  "$(i18n 'NEEDS YOUR REVIEW')" "$REVIEW_COUNT" "$(i18n 'modules')" "$REVIEW_HUMAN" \
+  "$(i18n 'medium/high risk, decide per item')"
 if [[ "$REVIEW_COUNT" -eq 0 ]]; then
-  echo "  (none)"
+  printf "  %s\n" "$(i18n '(none)')"
 else
   format_section "review"
 fi
 
 echo ""
-echo "▼ SKIPPED  ($SKIPPED_COUNT modules)  — need sudo or permission denied"
+printf "▼ %s  (%s %s)  — %s\n" \
+  "$(i18n 'SKIPPED')" "$SKIPPED_COUNT" "$(i18n 'modules')" "$(i18n 'need sudo or permission denied')"
 grep '"tier":"skipped"' "$SCAN_OUT" | while IFS= read -r line; do
   name=$(echo "$line" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
   reason=$(echo "$line" | sed -n 's/.*"reason":"\([^"]*\)".*/\1/p')
@@ -121,26 +130,24 @@ done
 echo ""
 echo "──────────────────────────────────────────────────────────────────────────────"
 TOTAL=$((AUTO_SAFE_BYTES + REVIEW_BYTES))
-printf "  Total reclaimable: %-10s  |  Disk free now: %-10s\n" \
-  "$(format_bytes "$TOTAL")" "$(format_bytes "$DISK_FREE")"
+printf "  %s %-10s  |  %s %-10s\n" \
+  "$(i18n 'Total reclaimable:')" "$(format_bytes "$TOTAL")" \
+  "$(i18n 'Disk free now:')" "$(format_bytes "$DISK_FREE")"
 echo "──────────────────────────────────────────────────────────────────────────────"
 
 if [[ $EXECUTE -ne 1 ]]; then
   echo ""
-  echo "Next steps (choose one):"
-  echo "  1. AUTO-CLEAN safe items (recommended, no impact):"
-  echo "       $0 --auto-safe --yes"
-  echo "  2. INTERACTIVE review of medium/high-risk items (one-by-one decision):"
-  echo "       $0 --review"
-  echo "  3. BOTH (auto-safe + interactive review):"
-  echo "       $0 --all"
+  echo "$(i18n 'Next steps (choose one):')"
+  printf "  1. %s\n       %s --auto-safe --yes\n" "$(i18n 'AUTO-CLEAN safe items (recommended, no impact):')" "$0"
+  printf "  2. %s\n       %s --review\n" "$(i18n 'INTERACTIVE review of medium/high-risk items (one-by-one decision):')" "$0"
+  printf "  3. %s\n       %s --all\n" "$(i18n 'BOTH (auto-safe + interactive review):')" "$0"
   echo ""
   rm -f "$SCAN_OUT"
   exit 0
 fi
 
 echo ""
-log "═══ STEP 2: CLEAN (tier=$TIER) ═══"
+log "$(printf "═══ $(i18n 'STEP 2: CLEAN (tier=%s)') ═══" "$TIER")"
 
 need_gate=0
 if [[ "$TIER" == "all" && $YES -ne 1 ]]; then need_gate=1; fi
@@ -148,17 +155,17 @@ if [[ "$TIER" == "auto_safe" && $YES -ne 1 ]]; then
   if [[ "$AUTO_SAFE_BYTES" -gt $((GATE_GB * 1024 * 1024 * 1024)) ]]; then need_gate=1; fi
 fi
 if [[ $need_gate -eq 1 ]]; then
-  echo "About to clean $AUTO_SAFE_HUMAN auto-safe + $REVIEW_HUMAN review."
-  echo "Pass --yes to skip this prompt."
-  echo -n "Proceed? (yes/no): "
+  printf "$(i18n 'About to clean %s auto-safe + %s review.')\n" "$AUTO_SAFE_HUMAN" "$REVIEW_HUMAN"
+  printf "%s\n" "$(i18n 'Pass --yes to skip this prompt.')"
+  printf "%s" "$(i18n 'Proceed? (yes/no): ')"
   read -r ans
-  case "$ans" in y|yes|Y|YES) ;; *) log "Cancelled."; rm -f "$SCAN_OUT"; exit 1 ;; esac
+  case "$ans" in y|yes|Y|YES) ;; *) log "$(i18n 'Cancelled.')"; rm -f "$SCAN_OUT"; exit 1 ;; esac
 fi
 
 EXEC_OUT="$(mktemp)"
 
 if [[ "$TIER" == "auto_safe" || "$TIER" == "all" ]]; then
-  log "Running auto-safe modules ($AUTO_SAFE_COUNT modules)..."
+  log "$(printf "$(i18n 'Running auto-safe modules (%s modules)...')" "$AUTO_SAFE_COUNT")"
   exec_args=( --yes --tier auto_safe )
   [[ -n "$SCOPE_FILTER" ]] && exec_args+=( --scope "$SCOPE_FILTER" )
   [[ "$WITH_SUDO" -eq 1 ]] && exec_args+=( --with-sudo )
@@ -167,11 +174,11 @@ fi
 
 if [[ "$TIER" == "review" || "$TIER" == "all" ]]; then
   if [[ "$REVIEW_COUNT" -eq 0 ]]; then
-    log "No review-tier modules with data; skipping."
+    log "$(i18n 'No review-tier modules with data; skipping.')"
   else
     echo ""
-    log "═══ Interactive review (medium/high risk) ═══"
-    echo "For each module: [d]elete  [k]eep (skip)  [q]uit review"
+    log "═══ $(i18n 'Interactive review (medium/high risk)') ═══"
+    echo "$(i18n 'For each module: [d]elete  [k]eep (skip)  [q]uit review')"
     echo ""
     while IFS= read -r line; do
       name=$(echo "$line" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
@@ -183,32 +190,33 @@ if [[ "$TIER" == "review" || "$TIER" == "all" ]]; then
       [[ "${bytes:-0}" -eq 0 ]] && continue
 
       echo "─────────────────────────────────────────────────────────────────────"
-      echo "  $name  ($human, risk=$risk)"
+      printf "  %s  (%s, %s=%s)\n" "$name" "$human" "$(i18n 'RISK')" "$risk"
       echo "  → $desc"
-      echo -n "  [d]elete / [k]eep / [q]uit ? "
+      printf "%s" "$(i18n '  [d]elete / [k]eep / [q]uit ? ')"
       read -r answer </dev/tty
       case "$answer" in
         d|D|delete)
-          log "Deleting $mod..."
+          log "$(printf "$(i18n 'Deleting %s...')" "$mod")"
           "$SCRIPT_DIR/execute.sh" --yes --module "$mod" --tier all >> "$EXEC_OUT" 2>&1 || true
           ;;
-        q|Q|quit) log "Review aborted by user."; break ;;
-        *) log "Kept (skipped) $mod." ;;
+        q|Q|quit) log "$(i18n 'Review aborted by user.')"; break ;;
+        *) log "$(printf "$(i18n 'Kept (skipped) %s.')" "$mod")" ;;
       esac
     done < <(grep '"tier":"review"' "$SCAN_OUT")
   fi
 fi
 
 echo ""
-log "═══ FINAL REPORT ═══"
+log "═══ $(i18n 'FINAL REPORT') ═══"
 TOTAL_FREED=$(grep '"_total"' "$EXEC_OUT" | sed -n 's/.*"bytes_freed":\([0-9]*\).*/\1/p' | head -1)
 TOTAL_FREED="${TOTAL_FREED:-0}"
 DISK_AFTER=$(disk_free_bytes)
-log "Reclaimed: $(format_bytes "$TOTAL_FREED")"
-log "Disk free: $(format_bytes "$DISK_FREE") → $(format_bytes "$DISK_AFTER")"
+log "$(printf "$(i18n 'Reclaimed: %s')" "$(format_bytes "$TOTAL_FREED")")"
+log "$(printf "$(i18n 'Disk free: %s → %s')" "$(format_bytes "$DISK_FREE")" "$(format_bytes "$DISK_AFTER")")"
 
 if [[ "$NOTIFY_MODE" == "notify" ]] && command -v osascript >/dev/null 2>&1; then
-  osascript -e "display notification \"Reclaimed $(format_bytes "$TOTAL_FREED")\" with title \"MacAutoClean\"" 2>/dev/null || true
+  notify_msg="$(printf "$(i18n 'Reclaimed %s')" "$(format_bytes "$TOTAL_FREED")")"
+  osascript -e "display notification \"$notify_msg\" with title \"MacAutoClean\"" 2>/dev/null || true
 fi
 
 rm -f "$SCAN_OUT" "$EXEC_OUT"

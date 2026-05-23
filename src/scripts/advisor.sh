@@ -23,7 +23,7 @@ for arg in "$@"; do
   esac
 done
 
-log "Smart Advisor — scanning for large/stale folders..."
+log "$(i18n 'Smart Advisor — scanning for large/stale folders...')"
 
 # Collect all TSV rows
 TSV="$(mktemp)"
@@ -52,15 +52,16 @@ if [[ "$JSON" -eq 1 ]]; then
 fi
 
 if [[ "$count" -eq 0 ]]; then
-  log "No advisor candidates found. Your large folders look reasonable."
+  log "$(i18n 'No advisor candidates found. Your large folders look reasonable.')"
   rm -f "$SORTED"
   exit 0
 fi
 
 echo ""
-echo "Found $count candidates for review:"
+printf "$(i18n 'Found %d candidates for review:')\n" "$count"
 echo ""
-printf "  %-40s %-9s %-12s %-30s %s\n" "ITEM" "SIZE" "LAST USED" "RECOMMENDATION" "PATH"
+printf "  %-40s %-9s %-12s %-30s %s\n" \
+  "$(i18n 'ITEM')" "$(i18n 'SIZE')" "$(i18n 'LAST USED')" "$(i18n 'RECOMMENDATION')" "$(i18n 'PATH')"
 printf "  %-40s %-9s %-12s %-30s %s\n" "----" "----" "---------" "--------------" "----"
 idx=0
 while IFS=$'\t' read -r name path bytes last_access rec expl; do
@@ -72,14 +73,14 @@ done < "$SORTED"
 echo ""
 
 if [[ "$INTERACTIVE" -eq 0 ]]; then
-  log "Re-run with --interactive to delete items one-by-one."
+  log "$(i18n 'Re-run with --interactive to delete items one-by-one.')"
   rm -f "$SORTED"
   exit 0
 fi
 
 # --- Interactive mode ---
 echo ""
-echo "Interactive review — for each item: [d]elete, [k]eep, [s]kip, [q]uit"
+echo "$(i18n 'Interactive review — for each item: [d]elete, [k]eep, [s]kip, [q]uit')"
 echo ""
 
 total_freed=0
@@ -88,33 +89,33 @@ while IFS=$'\t' read -r name path bytes last_access rec expl; do
   [[ -e "$path" ]] || continue
   hum=$(format_bytes "$bytes")
   echo "── $name ──"
-  echo "  Path:           $path"
-  echo "  Size:           $hum"
-  echo "  Last modified:  $last_access"
-  echo "  Recommendation: $rec"
+  printf "  %-16s%s\n" "$(i18n 'Path:')"          "$path"
+  printf "  %-16s%s\n" "$(i18n 'Size:')"          "$hum"
+  printf "  %-16s%s\n" "$(i18n 'Last modified:')" "$last_access"
+  printf "  %-16s%s\n" "$(i18n 'Recommendation:')" "$rec"
   echo "  $expl"
-  echo -n "  > [d/k/s/q]: "
+  printf "%s" "$(i18n '  > [d/k/s/q]: ')"
   read -r choice </dev/tty
   case "$choice" in
     d|D)
       if is_whitelisted "$path"; then
         if safe_rm "$path"; then
           total_freed=$((total_freed + bytes))
-          echo "  ✓ Deleted: $hum freed"
+          printf "$(i18n '  ✓ Deleted: %s freed')\n" "$hum"
         else
-          echo "  ✗ Delete failed (see log)"
+          echo "$(i18n '  ✗ Delete failed (see log)')"
         fi
       else
-        echo "  ⚠  Path outside whitelist. Refusing to delete from advisor."
-        echo "     To remove manually: rm -rf \"$path\"  (verify carefully first)"
+        echo "$(i18n '  ⚠  Path outside whitelist. Refusing to delete from advisor.')"
+        printf "$(i18n '     To remove manually: rm -rf "%s"  (verify carefully first)')\n" "$path"
       fi
       ;;
-    s|S) echo "  Skipped." ;;
-    q|Q) echo "  Exiting."; break ;;
-    *)   echo "  Kept." ;;
+    s|S) echo "$(i18n '  Skipped.')" ;;
+    q|Q) echo "$(i18n '  Exiting.')"; break ;;
+    *)   echo "$(i18n '  Kept.')" ;;
   esac
   echo ""
 done < "$SORTED"
 
-log "Advisor session complete. Total freed: $(format_bytes "$total_freed")"
+log "$(printf "$(i18n 'Advisor session complete. Total freed: %s')" "$(format_bytes "$total_freed")")"
 rm -f "$SORTED"

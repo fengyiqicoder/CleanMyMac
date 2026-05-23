@@ -37,7 +37,7 @@ auto_safe_count=0
 review_count=0
 skipped_count=0
 
-[[ $QUIET -eq 0 ]] && log "Scanning modules in $MODULES_DIR..."
+[[ $QUIET -eq 0 ]] && log "$(printf "$(i18n 'Scanning modules in %s...')" "$MODULES_DIR")"
 
 shopt -s nullglob
 for module_file in "$MODULES_DIR"/*.sh; do
@@ -130,6 +130,9 @@ emit_report \
   disk_used_pct="$(disk_used_pct)"
 
 if [[ $QUIET -eq 0 ]]; then
-  log "Scan complete: $auto_safe_count auto-safe ($(format_bytes "$auto_safe_bytes")), $review_count review ($(format_bytes "$review_bytes")), $skipped_count skipped."
+  log "$(printf "$(i18n 'Scan complete: %d auto-safe (%s), %d review (%s), %d skipped.')" \
+    "$auto_safe_count" "$(format_bytes "$auto_safe_bytes")" \
+    "$review_count" "$(format_bytes "$review_bytes")" \
+    "$skipped_count")"
 fi
 exit 0
