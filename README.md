@@ -3,6 +3,7 @@
 > An open-source Claude Code skill for safe, automated macOS storage cleanup.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![skills.sh](https://skills.sh/b/fengyiqicoder/MacAutoClean)](https://skills.sh/fengyiqicoder/MacAutoClean)
 
 MacAutoClean turns a typed phrase like _"clean my Mac"_ into a guided, safe, end-to-end disk cleanup. It ships **51 cleanup modules**, **9 smart-advisor heuristics**, and a **`launchd`-based recurring scheduler** — all gated by a hard-coded whitelist so user data is untouchable.
 
@@ -18,6 +19,16 @@ MacAutoClean turns a typed phrase like _"clean my Mac"_ into a guided, safe, end
 | **No quarantine** | Disk space is freed **immediately**. Reversibility comes from regenerable data: caches rebuild, package managers re-download, Xcode recompiles |
 
 ## 🚀 Quick start
+
+**Option A — install via [skills.sh](https://skills.sh) (one command, works with Claude Code, Cursor, Codex, Copilot, Gemini CLI, OpenCode, Goose, …):**
+
+```bash
+npx skills add fengyiqicoder/MacAutoClean
+```
+
+The CLI auto-detects your agent and drops the skill into the right directory (`~/.claude/skills/`, `.cursor/skills/`, `.codex/skills/`, etc.). Note: this installs the **skill definition** only — the cleanup scripts run from inside that directory, no extra install step needed.
+
+**Option B — clone + install (gives you the repo for hacking and uses the same `~/.claude/skills/` symlink):**
 
 ```bash
 git clone https://github.com/fengyiqicoder/MacAutoClean.git ~/Desktop/MacAutoClean
@@ -54,25 +65,27 @@ You can also use the CLI directly:
 
 ```
 MacAutoClean/
-├── src/                              # ⭐ everything Claude Code sees (symlinked by install.sh)
-│   ├── SKILL.md                      # workflow Claude follows when invoked
-│   ├── scripts/                      # lib, scan, execute, autoclean, advisor, schedule, notify
-│   ├── modules/                      # 51 cleanup categories (declarative shell files)
-│   ├── advisor-heuristics/           # 9 advisor rule packs
-│   ├── references/                   # whitelist, safety rules, cleanup catalog
-│   └── templates/                    # launchd plist template
+├── skills/
+│   └── macautoclean/                 # ⭐ the skill itself — follows the agentskills.io spec
+│       ├── SKILL.md                  # frontmatter (name + description) + the workflow agents follow
+│       ├── scripts/                  # lib, scan, execute, autoclean, advisor, schedule, notify
+│       ├── modules/                  # 51 cleanup categories (declarative shell files)
+│       ├── advisor-heuristics/       # 9 advisor rule packs
+│       ├── references/               # whitelist, safety rules, cleanup catalog
+│       └── templates/                # launchd plist template
+├── skills.sh.json                    # display config for the skills.sh directory page
 ├── tests/                            # 5 test files, ~218 assertions
 ├── docs/                             # architecture, module spec, advisor spec, schedule guide
-├── install.sh / uninstall.sh
+├── install.sh / uninstall.sh         # local symlink installer (clone-based usage)
 └── PLAN.md                           # the development plan
 ```
 
 ### Module format (declarative)
 
-Each cleanup category is a shell file in `src/modules/`. Adding a new category = adding one file. Example:
+Each cleanup category is a shell file in `skills/macautoclean/modules/`. Adding a new category = adding one file. Example:
 
 ```sh
-# src/modules/homebrew.sh
+# skills/macautoclean/modules/homebrew.sh
 MODULE_NAME="Homebrew"
 MODULE_DESCRIPTION="Old formula downloads, outdated bottles, unused dependencies."
 MODULE_RISK="low"
@@ -96,7 +109,7 @@ Five independent layers, each sufficient to prevent disaster:
 
 ### What's never touched
 
-`~/Documents`, `~/Desktop`, `~/Movies`, `~/Music`, `~/Pictures`, `~/Library/Mobile Documents` (iCloud), `~/Library/Mail`, `~/Library/Messages`, `~/Library/Keychains`, `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.kube`, browser `Cookies` / `Login Data` / `History` / `Bookmarks`, Docker volumes, external/network volumes. See [`src/references/safety-rules.md`](src/references/safety-rules.md).
+`~/Documents`, `~/Desktop`, `~/Movies`, `~/Music`, `~/Pictures`, `~/Library/Mobile Documents` (iCloud), `~/Library/Mail`, `~/Library/Messages`, `~/Library/Keychains`, `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.kube`, browser `Cookies` / `Login Data` / `History` / `Bookmarks`, Docker volumes, external/network volumes. See [`skills/macautoclean/references/safety-rules.md`](skills/macautoclean/references/safety-rules.md).
 
 ## 📊 Comparison
 
@@ -131,7 +144,7 @@ Removes the symlink and any installed LaunchAgent.
 
 ## 🤝 Contributing
 
-PRs welcome. Adding a new cleanup category is a 5-minute job — copy `src/modules/_template.sh`, fill it in, run `bash tests/test_module_files.sh` to validate. See [`docs/module-spec.md`](docs/module-spec.md).
+PRs welcome. Adding a new cleanup category is a 5-minute job — copy `skills/macautoclean/modules/_template.sh`, fill it in, run `bash tests/test_module_files.sh` to validate. See [`docs/module-spec.md`](docs/module-spec.md).
 
 ## 📝 License
 

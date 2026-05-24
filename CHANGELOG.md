@@ -2,6 +2,15 @@
 
 All notable changes to MacAutoClean.
 
+## [Unreleased]
+
+### Changed
+- **Repo layout follows the [Agent Skills](https://agentskills.io/) spec.** Skill source moved from `src/` to `skills/macautoclean/`, so `SKILL.md` lives at the standard path that `npx skills add fengyiqicoder/MacAutoClean` (and skills.sh) expects. `install.sh`, tests, and docs updated accordingly — no functional change.
+
+### Added
+- `skills.sh.json` at the repo root — display config for the [skills.sh](https://skills.sh/fengyiqicoder/MacAutoClean) directory page.
+- README: install-via-skills.sh instructions and badge.
+
 ## [0.1.0] — 2026-05-22
 
 Initial public release.

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# install.sh — link src/ into ~/.claude/skills/macautoclean so Claude Code can discover it.
+# install.sh — link skills/macautoclean/ into ~/.claude/skills/macautoclean so Claude Code can discover it.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-SRC="$REPO_ROOT/src"
+SRC="$REPO_ROOT/skills/macautoclean"
 DST="$HOME/.claude/skills/macautoclean"
 
 if [[ ! -d "$SRC" ]]; then

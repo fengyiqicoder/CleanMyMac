@@ -4,7 +4,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-. "$REPO/src/scripts/lib.sh"
+. "$REPO/skills/macautoclean/scripts/lib.sh"
 
 PASS=0; FAIL=0
 assert_eq() {

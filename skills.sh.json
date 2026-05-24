@@ -1,0 +1,12 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "macOS",
+      "description": "Skills for keeping a Mac fast and clutter-free.",
+      "skills": [
+        "macautoclean"
+      ]
+    }
+  ]
+}

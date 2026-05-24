@@ -4,8 +4,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-export WHITELIST_FILE="$REPO/src/references/whitelist.txt"
-. "$REPO/src/scripts/lib.sh"
+export WHITELIST_FILE="$REPO/skills/macautoclean/references/whitelist.txt"
+. "$REPO/skills/macautoclean/scripts/lib.sh"
 
 PASS=0; FAIL=0
 

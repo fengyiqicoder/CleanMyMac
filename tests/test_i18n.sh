@@ -8,7 +8,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-SCRIPTS="$REPO/src/scripts"
+SCRIPTS="$REPO/skills/macautoclean/scripts"
 
 PASS=0; FAIL=0
 ok()  { PASS=$((PASS+1)); }

@@ -7,26 +7,26 @@ Thanks for the interest! MacAutoClean is intentionally simple and contributor-fr
 ### 1. Add a new cleanup module
 
 ```bash
-cp src/modules/_template.sh src/modules/<your_category>.sh
-$EDITOR src/modules/<your_category>.sh
+cp skills/macautoclean/modules/_template.sh skills/macautoclean/modules/<your_category>.sh
+$EDITOR skills/macautoclean/modules/<your_category>.sh
 bash tests/test_module_files.sh    # must pass
 ```
 
-If your path isn't already whitelisted, add the prefix to `src/references/whitelist.txt` and document it in `src/references/whitelist.md`.
+If your path isn't already whitelisted, add the prefix to `skills/macautoclean/references/whitelist.txt` and document it in `skills/macautoclean/references/whitelist.md`.
 
 ### 2. Add a new advisor heuristic
 
 ```bash
-cp src/advisor-heuristics/large_misc.sh src/advisor-heuristics/<your_rule>.sh
-$EDITOR src/advisor-heuristics/<your_rule>.sh
-src/scripts/advisor.sh    # smoke check
+cp skills/macautoclean/advisor-heuristics/large_misc.sh skills/macautoclean/advisor-heuristics/<your_rule>.sh
+$EDITOR skills/macautoclean/advisor-heuristics/<your_rule>.sh
+skills/macautoclean/scripts/advisor.sh    # smoke check
 ```
 
 Heuristics must implement `discover()` emitting TSV (see `docs/advisor-spec.md`).
 
 ### 3. Improve scan/execute logic
 
-These live in `src/scripts/scan.sh` and `src/scripts/execute.sh`. After any change:
+These live in `skills/macautoclean/scripts/scan.sh` and `skills/macautoclean/scripts/execute.sh`. After any change:
 
 ```bash
 bash tests/test_lib.sh

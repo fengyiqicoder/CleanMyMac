@@ -1,6 +1,6 @@
 # Advisor Heuristic Spec
 
-A Smart Advisor heuristic is a shell file in `src/advisor-heuristics/` that surfaces deletion candidates beyond fixed cleanup modules.
+A Smart Advisor heuristic is a shell file in `skills/macautoclean/advisor-heuristics/` that surfaces deletion candidates beyond fixed cleanup modules.
 
 ## Required
 
@@ -47,7 +47,7 @@ The advisor engine sorts rows by `bytes` desc and presents them as a table. In `
 
 ## Adding a new heuristic
 
-1. Copy any existing file in `src/advisor-heuristics/` and adapt.
+1. Copy any existing file in `skills/macautoclean/advisor-heuristics/` and adapt.
 2. Make sure `discover()` is well-behaved on machines that don't have the relevant data (return zero rows, don't error out).
 3. Use `[[ -d "$path" ]] || continue` guards.
 4. Add a test row to `tests/test_advisor.sh` (TODO — not yet bundled).
