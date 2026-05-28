@@ -1,6 +1,6 @@
-# MacAutoClean — Open-Source Skill Development Plan (v2)
+# CleanMyMac — Open-Source Skill Development Plan (v2)
 
-> **Identity:** This plan is written from the perspective of a **skill developer** maintaining the open-source `macautoclean` skill repository at `/Users/fengyq/Desktop/MacAutoClean/`. All implementation work modifies source files in this repo. Users install the skill by cloning the repo and running `install.sh`, which symlinks `src/` into `~/.claude/skills/macautoclean`. We never write directly into the user's Claude skill directory.
+> **Identity:** This plan is written from the perspective of a **skill developer** maintaining the open-source `cleanmymac` skill repository at `/Users/fengyq/Desktop/CleanMyMac/`. All implementation work modifies source files in this repo. Users install the skill by cloning the repo and running `install.sh`, which symlinks `src/` into `~/.claude/skills/cleanmymac`. We never write directly into the user's Claude skill directory.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -30,12 +30,12 @@ Build a **distributable, open-source Claude Code skill** that, when invoked, per
 ## 📁 Repository Layout
 
 ```
-/Users/fengyq/Desktop/MacAutoClean/                # open-source repo root
+/Users/fengyq/Desktop/CleanMyMac/                # open-source repo root
 ├── README.md                                      # user-facing install/usage
 ├── LICENSE                                        # MIT
 ├── PLAN.md                                        # this document
 ├── CHANGELOG.md
-├── install.sh                                     # ln -s src → ~/.claude/skills/macautoclean
+├── install.sh                                     # ln -s src → ~/.claude/skills/cleanmymac
 ├── uninstall.sh                                   # rm symlink + unschedule launchd
 │
 ├── src/                                           # ⭐ the only thing Claude Code sees
@@ -118,7 +118,7 @@ Build a **distributable, open-source Claude Code skill** that, when invoked, per
 │   │   ├── safety-rules.md                        # invariants every script must enforce
 │   │   └── cleanup-catalog.md                     # one row per module: name, paths, reclaim, risk
 │   └── templates/
-│       └── com.macautoclean.plist.tmpl            # launchd LaunchAgent template
+│       └── com.cleanmymac.plist.tmpl            # launchd LaunchAgent template
 │
 ├── tests/                                         # not part of installed skill
 │   ├── test_lib.sh
@@ -216,8 +216,8 @@ The advisor engine collects all TSV rows, sorts by `bytes` desc, presents to the
 `schedule.sh` is interactive:
 
 ```
-$ macautoclean schedule
-How often should MacAutoClean run?
+$ cleanmymac schedule
+How often should CleanMyMac run?
   1) Weekly (Sunday 3 AM)
   2) Every 2 weeks (1st & 15th, 3 AM)
   3) Monthly (1st, 3 AM)
@@ -230,19 +230,19 @@ What scope on each run?
   3) Notify only — open Claude when ready                  [recommended]
 > 2
 
-Installing LaunchAgent ~/Library/LaunchAgents/com.macautoclean.plist …
+Installing LaunchAgent ~/Library/LaunchAgents/com.cleanmymac.plist …
 Loaded. Next run: Sunday 2026-05-24 03:00.
 
-Tip: run `macautoclean schedule --status` to inspect; `macautoclean unschedule` to remove.
+Tip: run `cleanmymac schedule --status` to inspect; `cleanmymac unschedule` to remove.
 ```
 
-Template `templates/com.macautoclean.plist.tmpl`:
+Template `templates/com.cleanmymac.plist.tmpl`:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.macautoclean</string>
+  <key>Label</key><string>com.cleanmymac</string>
   <key>ProgramArguments</key>
   <array>
     <string>{{SRC_DIR}}/scripts/autoclean.sh</string>
@@ -261,7 +261,7 @@ Template `templates/com.macautoclean.plist.tmpl`:
 
 `schedule.sh` substitutes placeholders and calls:
 ```bash
-launchctl bootstrap "gui/$UID" "$HOME/Library/LaunchAgents/com.macautoclean.plist"
+launchctl bootstrap "gui/$UID" "$HOME/Library/LaunchAgents/com.cleanmymac.plist"
 ```
 
 ## 🛡️ Safety Model (no quarantine)
@@ -289,7 +289,7 @@ Each task ends with: lint (`shellcheck`), all tests pass, commit.
   #!/usr/bin/env bash
   set -euo pipefail
   SRC="$(cd "$(dirname "$0")/src" && pwd)"
-  DST="$HOME/.claude/skills/macautoclean"
+  DST="$HOME/.claude/skills/cleanmymac"
   mkdir -p "$HOME/.claude/skills"
   [[ -L "$DST" ]] && rm "$DST"
   [[ -e "$DST" ]] && { echo "ERROR: $DST exists and is not a symlink" >&2; exit 1; }
@@ -381,8 +381,8 @@ Each sub-batch: write the modules, ensure `test_module_files.sh` passes, commit.
 
 ### Task 10 — Schedule feature (⭐ feature)
 
-- [ ] **Step 1**: write `docs/schedule-guide.md` — covers permissions (TCC Full Disk Access for the LaunchAgent), inspect (`launchctl list | grep macautoclean`), logs (`~/Library/Logs/macautoclean-scheduled.log`), troubleshooting.
-- [ ] **Step 2**: write `src/templates/com.macautoclean.plist.tmpl`.
+- [ ] **Step 1**: write `docs/schedule-guide.md` — covers permissions (TCC Full Disk Access for the LaunchAgent), inspect (`launchctl list | grep cleanmymac`), logs (`~/Library/Logs/cleanmymac-scheduled.log`), troubleshooting.
+- [ ] **Step 2**: write `src/templates/com.cleanmymac.plist.tmpl`.
 - [ ] **Step 3**: write `tests/test_schedule.sh` — uses a stub `$HOME/Library/LaunchAgents` dir; asserts the generated plist parses with `plutil -lint`, has the right `Label`, the right `StartCalendarInterval` for each preset.
 - [ ] **Step 4**: write `src/scripts/schedule.sh`:
   - Interactive menu (weekly / biweekly / monthly / custom)
@@ -391,7 +391,7 @@ Each sub-batch: write the modules, ensure `test_module_files.sh` passes, commit.
   - `launchctl bootstrap gui/$UID …` (handle already-loaded case with `launchctl bootout` first)
   - `schedule --status` and `schedule --next-run`
 - [ ] **Step 5**: write `src/scripts/unschedule.sh` (bootout + rm plist).
-- [ ] **Step 6**: write `src/scripts/notify.sh` (wraps `osascript -e 'display notification "..." with title "MacAutoClean"'`; fall back to `terminal-notifier` if installed).
+- [ ] **Step 6**: write `src/scripts/notify.sh` (wraps `osascript -e 'display notification "..." with title "CleanMyMac"'`; fall back to `terminal-notifier` if installed).
 - [ ] **Step 7**: tests pass. Commit.
 
 ### Task 11 — SKILL.md workflow
@@ -400,13 +400,13 @@ Each sub-batch: write the modules, ensure `test_module_files.sh` passes, commit.
 
   ```markdown
   ---
-  name: macautoclean
+  name: cleanmymac
   description: Use when the user wants to free disk space on a Mac. Triggers on "clean my Mac", "free up space", "disk full", "where did my storage go", "全自动清理 Mac", "清理储存空间", "Xcode is eating my disk", "Docker is huge", "set up auto cleanup", "find large unused folders". Runs a 48-category sweep, surfaces large/stale folders for review (AI models, VMs, old node_modules, iOS backups), and can schedule recurring auto-cleanup via launchd.
   ---
   ```
 
   Phases:
-  1. **Baseline** — run `~/.claude/skills/macautoclean/scripts/scan.sh`; show table + `df -h /`.
+  1. **Baseline** — run `~/.claude/skills/cleanmymac/scripts/scan.sh`; show table + `df -h /`.
   2. **Cleanup** — confirm with user → `autoclean.sh --execute --yes --scope all`; stream output.
   3. **Smart Advisor** — run `advisor.sh --interactive`; walk user through candidates one-by-one.
   4. **Schedule** — ask "want this to run automatically?" → if yes, `schedule.sh`.

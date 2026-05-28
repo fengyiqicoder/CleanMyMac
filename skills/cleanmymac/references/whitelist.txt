@@ -1,4 +1,4 @@
-# MacAutoClean whitelist — one prefix per line. Lines starting with '#' are comments.
+# CleanMyMac whitelist — one prefix per line. Lines starting with '#' are comments.
 # safe_rm() refuses any path not matching a prefix here. Edit with extreme care.
 # '~' expands to $HOME at load time.
 
@@ -121,8 +121,8 @@
 ~/Library/Application Support/lunarclient/logs
 ~/Library/Application Support/lunarclient/cache
 
-# --- macautoclean own state ---
-/tmp/macautoclean
+# --- cleanmymac own state ---
+/tmp/cleanmymac
 
 # --- Added 2026-05-22: umbrella modules for deep-scan annotation ---
 ~/.cocoapods

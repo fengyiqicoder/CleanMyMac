@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# lib.sh — shared helpers for MacAutoClean scripts.
+# lib.sh — shared helpers for CleanMyMac scripts.
 # Compatible with macOS default bash 3.2. No bash 4+ features.
 
-: "${MAC_AUTOCLEAN_VERSION:=0.1.0}"
-: "${LOG_FILE:=$HOME/Library/Logs/macautoclean.log}"
+: "${CLEAN_MY_MAC_VERSION:=0.1.0}"
+: "${LOG_FILE:=$HOME/Library/Logs/cleanmymac.log}"
 : "${DRY_RUN:=0}"
 
 _LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,11 +17,11 @@ mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
 
 
 # ---- i18n ----
-# Resolution order: MAC_AUTOCLEAN_LANG (explicit, takes precedence) > $LANG / $LC_ALL / $LC_CTYPE.
-# Claude Code sets MAC_AUTOCLEAN_LANG when it detects the conversation language
+# Resolution order: CLEAN_MY_MAC_LANG (explicit, takes precedence) > $LANG / $LC_ALL / $LC_CTYPE.
+# Claude Code sets CLEAN_MY_MAC_LANG when it detects the conversation language
 # differs from the shell's locale.
 MAC_LANG="en"
-case "${MAC_AUTOCLEAN_LANG:-${LANG:-${LC_ALL:-${LC_CTYPE:-}}}}" in
+case "${CLEAN_MY_MAC_LANG:-${LANG:-${LC_ALL:-${LC_CTYPE:-}}}}" in
   zh*|*ZH*) MAC_LANG="zh" ;;
 esac
 export MAC_LANG

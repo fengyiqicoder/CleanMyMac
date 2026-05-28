@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Validates every skills/macautoclean/modules/*.sh against the module spec.
+# Validates every skills/cleanmymac/modules/*.sh against the module spec.
 # Run after authoring or modifying any module file.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-export WHITELIST_FILE="$REPO/skills/macautoclean/references/whitelist.txt"
-. "$REPO/skills/macautoclean/scripts/lib.sh"
+export WHITELIST_FILE="$REPO/skills/cleanmymac/references/whitelist.txt"
+. "$REPO/skills/cleanmymac/scripts/lib.sh"
 
 PASS=0; FAIL=0
 banned_patterns=( "docker volume prune" "rm -rf /" "sudo " )
 
 count=0
-for module in "$REPO/skills/macautoclean/modules/"*.sh; do
+for module in "$REPO/skills/cleanmymac/modules/"*.sh; do
   base="$(basename "$module")"
   case "$base" in _*) continue ;; esac
   count=$((count+1))

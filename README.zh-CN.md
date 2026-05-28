@@ -2,19 +2,19 @@
   <a href="README.md">English</a> ・ <b>简体中文</b>
 </p>
 
-# MacAutoClean
+# CleanMyMac
 
 > 对你的 AI 助手说一句**"清理我的 Mac"** —— 它就帮你搞定了。安全地。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![skills.sh](https://skills.sh/b/fengyiqicoder/MacAutoClean)](https://skills.sh/fengyiqicoder/MacAutoClean)
+[![skills.sh](https://skills.sh/b/fengyiqicoder/CleanMyMac)](https://skills.sh/fengyiqicoder/CleanMyMac)
 [![Agent Skills](https://img.shields.io/badge/Agent_Skills-compliant-blue)](https://agentskills.io)
 
-MacAutoClean 是为 macOS 设计的 **AI 原生磁盘清理工具**。它以 [Agent Skill](https://agentskills.io) 格式安装到任何兼容的 AI 编码助手里（Claude Code、Cursor、Codex、Copilot、Gemini CLI、OpenCode、Goose、Junie、Amp 等），把一句随口的 *"硬盘满了"* 转化成有引导、扫描优先、白名单严格守护的清理流程。**68 个清理模块**、**9 个智能顾问启发式规则**，可选的 `launchd` **每周自动清理**——全部用纯 bash 3.2 编写，零依赖。
+CleanMyMac 是为 macOS 设计的 **AI 原生磁盘清理工具**。它以 [Agent Skill](https://agentskills.io) 格式安装到任何兼容的 AI 编码助手里（Claude Code、Cursor、Codex、Copilot、Gemini CLI、OpenCode、Goose、Junie、Amp 等），把一句随口的 *"硬盘满了"* 转化成有引导、扫描优先、白名单严格守护的清理流程。**68 个清理模块**、**9 个智能顾问启发式规则**，可选的 `launchd` **每周自动清理**——全部用纯 bash 3.2 编写，零依赖。
 
 ---
 
-## ✨ 为什么选 MacAutoClean
+## ✨ 为什么选 CleanMyMac
 
 |  | 实际情况 |
 |---|---|
@@ -34,7 +34,7 @@ MacAutoClean 是为 macOS 设计的 **AI 原生磁盘清理工具**。它以 [Ag
 一行命令，所有支持 Agent Skills 的工具都通用：
 
 ```bash
-npx skills add fengyiqicoder/MacAutoClean
+npx skills add fengyiqicoder/CleanMyMac
 ```
 
 完事。打开 Claude Code（或 Cursor / Codex / Copilot / Gemini CLI / OpenCode 等等），跟它说：
@@ -48,12 +48,12 @@ AI 会读取 skill 的 `SKILL.md` 并带你走完 扫描 → 确认 → 执行 �
 如果你想自己改模块、看看代码再装：
 
 ```bash
-git clone https://github.com/fengyiqicoder/MacAutoClean.git
-cd MacAutoClean
+git clone https://github.com/fengyiqicoder/CleanMyMac.git
+cd CleanMyMac
 bash install.sh
 ```
 
-`install.sh` 会把 `skills/macautoclean/` 软链到 `~/.claude/skills/macautoclean/`，Claude Code 立刻能识别。
+`install.sh` 会把 `skills/cleanmymac/` 软链到 `~/.claude/skills/cleanmymac/`，Claude Code 立刻能识别。
 
 ### 方式 C —— 纯命令行使用（不用 AI）
 
@@ -61,19 +61,19 @@ bash install.sh
 
 ```bash
 # 看看磁盘空间都去哪了——自动分成三色清单
-~/.claude/skills/macautoclean/scripts/diskmap.sh
+~/.claude/skills/cleanmymac/scripts/diskmap.sh
 
 # 批量删安全项（缓存、构建产物）
-~/.claude/skills/macautoclean/scripts/autoclean.sh --auto-safe --yes
+~/.claude/skills/cleanmymac/scripts/autoclean.sh --auto-safe --yes
 
 # 手动审查临界项
-~/.claude/skills/macautoclean/scripts/autoclean.sh --review
+~/.claude/skills/cleanmymac/scripts/autoclean.sh --review
 
 # 找出陈旧的 node_modules、旧的 AI 模型、废弃的虚拟机
-~/.claude/skills/macautoclean/scripts/advisor.sh --interactive
+~/.claude/skills/cleanmymac/scripts/advisor.sh --interactive
 
 # 装个每周自动清理
-~/.claude/skills/macautoclean/scripts/schedule.sh
+~/.claude/skills/cleanmymac/scripts/schedule.sh
 ```
 
 ---
@@ -195,13 +195,13 @@ unschedule.sh               # 卸载
 
 `~/Documents` · `~/Desktop` · `~/Movies` · `~/Music` · `~/Pictures` · `~/Library/Mobile Documents`（iCloud） · `~/Library/Mail` · `~/Library/Messages` · `~/Library/Keychains` · `~/.ssh` · `~/.gnupg` · `~/.aws` · `~/.kube` · 浏览器 `Cookies` / `Login Data` / `History` / `Bookmarks` / `Preferences` · Docker volumes · 外置 & 网络卷
 
-详见 [`skills/macautoclean/references/safety-rules.md`](skills/macautoclean/references/safety-rules.md)。
+详见 [`skills/cleanmymac/references/safety-rules.md`](skills/cleanmymac/references/safety-rules.md)。
 
 ---
 
 ## 🌍 多语言
 
-MacAutoClean 是**双语**的——自动根据 `$LANG` 检测：
+CleanMyMac 是**双语**的——自动根据 `$LANG` 检测：
 
 - `zh*` → 中文
 - 其它 → English
@@ -209,24 +209,24 @@ MacAutoClean 是**双语**的——自动根据 `$LANG` 检测：
 随时强制指定语言：
 
 ```bash
-MAC_AUTOCLEAN_LANG=zh ~/.claude/skills/macautoclean/scripts/diskmap.sh
-MAC_AUTOCLEAN_LANG=en ~/.claude/skills/macautoclean/scripts/autoclean.sh
+CLEAN_MY_MAC_LANG=zh ~/.claude/skills/cleanmymac/scripts/diskmap.sh
+CLEAN_MY_MAC_LANG=en ~/.claude/skills/cleanmymac/scripts/autoclean.sh
 ```
 
 本 README 的其它语言版本：
 - 🇺🇸 [English](README.md)
 - 🇨🇳 **简体中文** *（当前页）*
 
-想加入其它语言？翻译字典就是一个 bash 文件：[`skills/macautoclean/references/i18n.sh`](skills/macautoclean/references/i18n.sh)。欢迎 PR。
+想加入其它语言？翻译字典就是一个 bash 文件：[`skills/cleanmymac/references/i18n.sh`](skills/cleanmymac/references/i18n.sh)。欢迎 PR。
 
 ---
 
 ## 🧱 架构
 
 ```
-MacAutoClean/
+CleanMyMac/
 ├── skills/
-│   └── macautoclean/                 # ⭐ skill 本体 —— 遵循 Agent Skills 规范
+│   └── cleanmymac/                 # ⭐ skill 本体 —— 遵循 Agent Skills 规范
 │       ├── SKILL.md                  # AI 助手读取并执行的工作流
 │       ├── scripts/                  # lib、scan、execute、diskmap、autoclean、advisor、schedule
 │       ├── modules/                  # 68 个清理类别（声明式 shell 文件）
@@ -245,7 +245,7 @@ MacAutoClean/
 每个清理类别都是一个声明式 shell 文件。新加一个 = 5 分钟。
 
 ```bash
-# skills/macautoclean/modules/homebrew.sh
+# skills/cleanmymac/modules/homebrew.sh
 MODULE_NAME="Homebrew"
 MODULE_NAME_ZH="Homebrew"
 MODULE_DESCRIPTION="Outdated bottles, old downloads, unused dependencies"
@@ -263,7 +263,7 @@ MODULE_REQUIRES="brew"                                  # 没装 brew 就跳过
 
 ## 📊 与其它 Mac 清理工具对比
 
-| | **MacAutoClean** | CleanMyMac | mac-cleanup-py | Pearcleaner |
+| | **CleanMyMac** | CleanMyMac | mac-cleanup-py | Pearcleaner |
 |---|---|---|---|---|
 | 开源 | ✅ MIT | ❌ 商业软件 | ✅ Apache-2.0 | ✅ Apache + CC |
 | 免费 | ✅ | ❌ ¥298/年 | ✅ | ✅ |
@@ -294,8 +294,8 @@ bash tests/test_smoke.sh                     # 6 个端到端检查
 
 欢迎 PR。常见贡献方式：
 
-- **新增清理模块** —— 复制 `skills/macautoclean/modules/_template.sh`，填好字段，跑 `bash tests/test_module_files.sh`。5 分钟搞定。
-- **新增顾问启发式** —— 复制 `skills/macautoclean/advisor-heuristics/large_misc.sh`，实现 `discover()`。
+- **新增清理模块** —— 复制 `skills/cleanmymac/modules/_template.sh`，填好字段，跑 `bash tests/test_module_files.sh`。5 分钟搞定。
+- **新增顾问启发式** —— 复制 `skills/cleanmymac/advisor-heuristics/large_misc.sh`，实现 `discover()`。
 - **新增语言** —— 在 `references/i18n.sh` 里加一个 `_i18n_<code>()` 函数加 dispatch 分支。
 
 详见 [`docs/contributing.md`](docs/contributing.md)。
@@ -308,7 +308,7 @@ bash tests/test_smoke.sh                     # 6 个端到端检查
 bash uninstall.sh
 ```
 
-会移除 `~/.claude/skills/macautoclean` 软链和已安装的 LaunchAgent。
+会移除 `~/.claude/skills/cleanmymac` 软链和已安装的 LaunchAgent。
 
 ---
 

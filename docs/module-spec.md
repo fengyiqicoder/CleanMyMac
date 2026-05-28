@@ -1,6 +1,6 @@
 # Module Spec
 
-A MacAutoClean **module** is a shell file in `skills/macautoclean/modules/` that declares one cleanup category. Modules are pure data — the runtime in `skills/macautoclean/scripts/{scan,execute}.sh` does all the work.
+A CleanMyMac **module** is a shell file in `skills/cleanmymac/modules/` that declares one cleanup category. Modules are pure data — the runtime in `skills/cleanmymac/scripts/{scan,execute}.sh` does all the work.
 
 ## Required fields
 
@@ -24,7 +24,7 @@ A MacAutoClean **module** is a shell file in `skills/macautoclean/modules/` that
 
 ## Build-time validation
 
-`tests/test_module_files.sh` validates every `skills/macautoclean/modules/*.sh`:
+`tests/test_module_files.sh` validates every `skills/cleanmymac/modules/*.sh`:
 
 1. Sources without error via `load_module`
 2. All required fields present and non-empty
@@ -73,7 +73,7 @@ MODULE_AGE_DAYS=90
 
 ## Adding a new module
 
-1. Copy `skills/macautoclean/modules/_template.sh` → `skills/macautoclean/modules/<category>.sh`
+1. Copy `skills/cleanmymac/modules/_template.sh` → `skills/cleanmymac/modules/<category>.sh`
 2. Fill in fields
 3. If your paths are not already in `whitelist.txt`, add the prefix there and document it in `whitelist.md`
 4. Run `bash tests/test_module_files.sh` to validate

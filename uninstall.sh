@@ -2,8 +2,8 @@
 # uninstall.sh — remove the skill symlink and any active LaunchAgent.
 set -euo pipefail
 
-DST="$HOME/.claude/skills/macautoclean"
-AGENT="$HOME/Library/LaunchAgents/com.macautoclean.plist"
+DST="$HOME/.claude/skills/cleanmymac"
+AGENT="$HOME/Library/LaunchAgents/com.cleanmymac.plist"
 
 if [[ -f "$AGENT" ]]; then
   echo "Removing LaunchAgent..."

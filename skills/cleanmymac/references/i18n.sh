@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# i18n.sh — translation dictionary for MacAutoClean.
+# i18n.sh — translation dictionary for CleanMyMac.
 #
 # Design (gettext-style):
 #   • All user-facing strings in scripts are written in English at the call site.
@@ -64,7 +64,7 @@ _i18n_zh() {
                                                          printf '%s' "扫描完成：%d 项安全清理（%s），%d 项需审核（%s），%d 项跳过。" ;;
 
     # ── autoclean.sh — banners & sections ─────────────────────────────────
-    "MacAutoClean — SCAN RESULTS")                       printf '%s' "MacAutoClean — 扫描结果" ;;
+    "CleanMyMac — SCAN RESULTS")                       printf '%s' "CleanMyMac — 扫描结果" ;;
     "AUTO-SAFE")                                         printf '%s' "安全清理" ;;
     "NEEDS YOUR REVIEW")                                 printf '%s' "需你审核" ;;
     "SKIPPED")                                           printf '%s' "已跳过" ;;
@@ -141,8 +141,8 @@ _i18n_zh() {
     "Advisor session complete. Total freed: %s")         printf '%s' "建议器会话结束。总计释放：%s" ;;
 
     # ── schedule.sh / unschedule.sh ───────────────────────────────────────
-    "MacAutoClean — Scheduled Auto-Run Setup")           printf '%s' "MacAutoClean — 定时自动运行设置" ;;
-    "How often should MacAutoClean run?")                printf '%s' "MacAutoClean 多久运行一次？" ;;
+    "CleanMyMac — Scheduled Auto-Run Setup")           printf '%s' "CleanMyMac — 定时自动运行设置" ;;
+    "How often should CleanMyMac run?")                printf '%s' "CleanMyMac 多久运行一次？" ;;
     "  1) Weekly (Sunday 3 AM)")                         printf '%s' "  1) 每周（周日 3:00）" ;;
     "  2) Every 2 weeks (1st and 15th of the month, 3 AM)") \
                                                          printf '%s' "  2) 每两周（每月 1 日和 15 日 3:00）" ;;

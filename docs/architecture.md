@@ -52,7 +52,7 @@ This means contributors don't write delete logic — they only describe paths. T
 
 ## Why no quarantine
 
-The repo evaluated a quarantine model where deleted items move to `/tmp/macautoclean/` for 24h. We dropped it because:
+The repo evaluated a quarantine model where deleted items move to `/tmp/cleanmymac/` for 24h. We dropped it because:
 - `/tmp` is on the same APFS volume as `~`, so `mv` does not reclaim disk space.
 - Caches and build artifacts are designed to be regenerable.
 - macOS already provides a 30-day Trash window for user-initiated deletions.
@@ -74,13 +74,13 @@ Reversibility comes from the data itself, not from a holding pen.
 schedule.sh
   │
   ├─ Interactive: pick cadence (weekly/biweekly/monthly/custom) + scope
-  ├─ Render: substitute placeholders in templates/com.macautoclean.plist.tmpl
+  ├─ Render: substitute placeholders in templates/com.cleanmymac.plist.tmpl
   ├─ Validate: plutil -lint
-  ├─ Install: launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.macautoclean.plist
-  └─ Confirm: launchctl list | grep com.macautoclean
+  ├─ Install: launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.cleanmymac.plist
+  └─ Confirm: launchctl list | grep com.cleanmymac
 ```
 
-The LaunchAgent runs `autoclean.sh --execute --yes --scope <X> --notify <Y>` at the chosen interval. Output goes to `~/Library/Logs/macautoclean-scheduled.log`.
+The LaunchAgent runs `autoclean.sh --execute --yes --scope <X> --notify <Y>` at the chosen interval. Output goes to `~/Library/Logs/cleanmymac-scheduled.log`.
 
 ## Why bash 3.2
 

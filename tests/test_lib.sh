@@ -4,7 +4,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-. "$REPO/skills/macautoclean/scripts/lib.sh"
+. "$REPO/skills/cleanmymac/scripts/lib.sh"
 
 PASS=0; FAIL=0
 assert_eq() {
@@ -42,7 +42,7 @@ rm -f "$TMP_WL"
 
 # ---- safe_rm ----
 TMP_WL="$(mktemp)"
-SAFE_TEST_DIR="${TMPDIR%/}/macautoclean_safe_rm_test"
+SAFE_TEST_DIR="${TMPDIR%/}/cleanmymac_safe_rm_test"
 echo "$SAFE_TEST_DIR" >"$TMP_WL"
 WHITELIST_FILE="$TMP_WL"
 mkdir -p "$SAFE_TEST_DIR"

@@ -4,7 +4,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-SCRIPTS="$REPO/skills/macautoclean/scripts"
+SCRIPTS="$REPO/skills/cleanmymac/scripts"
 
 PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); echo "  ✓ $1"; }
@@ -77,7 +77,7 @@ rm -f "$TMP_OUT"
 
 # 7. Cookies path is rejected (regression test for browser safety)
 . "$SCRIPTS/lib.sh"
-WHITELIST_FILE="$REPO/skills/macautoclean/references/whitelist.txt"
+WHITELIST_FILE="$REPO/skills/cleanmymac/references/whitelist.txt"
 if is_whitelisted "$HOME/Library/Application Support/Google/Chrome/Default/Cookies"; then
   bad "Chrome Cookies path should be rejected"
 else

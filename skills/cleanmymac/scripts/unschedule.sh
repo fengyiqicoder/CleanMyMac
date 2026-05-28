@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# unschedule.sh — remove the MacAutoClean LaunchAgent.
+# unschedule.sh — remove the CleanMyMac LaunchAgent.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/lib.sh"
 
-AGENT="$HOME/Library/LaunchAgents/com.macautoclean.plist"
+AGENT="$HOME/Library/LaunchAgents/com.cleanmymac.plist"
 
 if [[ ! -f "$AGENT" ]]; then
   printf "$(i18n 'No LaunchAgent installed (looked for %s).')\n" "$AGENT"

@@ -2,19 +2,19 @@
   <b>English</b> ・ <a href="README.zh-CN.md">简体中文</a>
 </p>
 
-# MacAutoClean
+# CleanMyMac
 
 > Tell your AI agent **"clean my Mac"** — and it just does it. Safely.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![skills.sh](https://skills.sh/b/fengyiqicoder/MacAutoClean)](https://skills.sh/fengyiqicoder/MacAutoClean)
+[![skills.sh](https://skills.sh/b/fengyiqicoder/CleanMyMac)](https://skills.sh/fengyiqicoder/CleanMyMac)
 [![Agent Skills](https://img.shields.io/badge/Agent_Skills-compliant-blue)](https://agentskills.io)
 
-MacAutoClean is the **AI-native disk cleaner** for macOS. It installs as an [Agent Skill](https://agentskills.io) into any compatible AI coding agent (Claude Code, Cursor, Codex, Copilot, Gemini CLI, OpenCode, Goose, Junie, Amp, …) and turns a casual phrase like *"my disk is full"* into a guided, scan-first, whitelist-gated cleanup. **68 cleanup modules**, **9 smart-advisor heuristics**, optional **weekly auto-run** via `launchd` — all in pure bash 3.2, zero dependencies.
+CleanMyMac is the **AI-native disk cleaner** for macOS. It installs as an [Agent Skill](https://agentskills.io) into any compatible AI coding agent (Claude Code, Cursor, Codex, Copilot, Gemini CLI, OpenCode, Goose, Junie, Amp, …) and turns a casual phrase like *"my disk is full"* into a guided, scan-first, whitelist-gated cleanup. **68 cleanup modules**, **9 smart-advisor heuristics**, optional **weekly auto-run** via `launchd` — all in pure bash 3.2, zero dependencies.
 
 ---
 
-## ✨ Why MacAutoClean
+## ✨ Why CleanMyMac
 
 |  | Reality |
 |---|---|
@@ -34,7 +34,7 @@ MacAutoClean is the **AI-native disk cleaner** for macOS. It installs as an [Age
 One command, works with every Agent-Skills-compliant tool:
 
 ```bash
-npx skills add fengyiqicoder/MacAutoClean
+npx skills add fengyiqicoder/CleanMyMac
 ```
 
 That's it. Now open Claude Code (or Cursor / Codex / Copilot / Gemini CLI / OpenCode / …) and say:
@@ -48,12 +48,12 @@ The agent reads the skill's `SKILL.md` and walks you through scan → confirm �
 If you want to hack on the modules or read the code first:
 
 ```bash
-git clone https://github.com/fengyiqicoder/MacAutoClean.git
-cd MacAutoClean
+git clone https://github.com/fengyiqicoder/CleanMyMac.git
+cd CleanMyMac
 bash install.sh
 ```
 
-`install.sh` symlinks `skills/macautoclean/` → `~/.claude/skills/macautoclean/`. Claude Code picks it up immediately.
+`install.sh` symlinks `skills/cleanmymac/` → `~/.claude/skills/cleanmymac/`. Claude Code picks it up immediately.
 
 ### Option C — CLI only (no AI agent)
 
@@ -61,19 +61,19 @@ Every script also runs standalone:
 
 ```bash
 # See where your disk space is — auto-classified into 3 tiers
-~/.claude/skills/macautoclean/scripts/diskmap.sh
+~/.claude/skills/cleanmymac/scripts/diskmap.sh
 
 # Bulk-delete the safe stuff (caches, build artifacts)
-~/.claude/skills/macautoclean/scripts/autoclean.sh --auto-safe --yes
+~/.claude/skills/cleanmymac/scripts/autoclean.sh --auto-safe --yes
 
 # Walk through the borderline stuff interactively
-~/.claude/skills/macautoclean/scripts/autoclean.sh --review
+~/.claude/skills/cleanmymac/scripts/autoclean.sh --review
 
 # Surface stale node_modules, old AI models, abandoned VMs, …
-~/.claude/skills/macautoclean/scripts/advisor.sh --interactive
+~/.claude/skills/cleanmymac/scripts/advisor.sh --interactive
 
 # Install weekly auto-cleanup
-~/.claude/skills/macautoclean/scripts/schedule.sh
+~/.claude/skills/cleanmymac/scripts/schedule.sh
 ```
 
 ---
@@ -195,13 +195,13 @@ Hard-coded blocklist that cannot be overridden:
 
 `~/Documents` · `~/Desktop` · `~/Movies` · `~/Music` · `~/Pictures` · `~/Library/Mobile Documents` (iCloud) · `~/Library/Mail` · `~/Library/Messages` · `~/Library/Keychains` · `~/.ssh` · `~/.gnupg` · `~/.aws` · `~/.kube` · browser `Cookies` / `Login Data` / `History` / `Bookmarks` / `Preferences` · Docker volumes · external & network volumes
 
-See [`skills/macautoclean/references/safety-rules.md`](skills/macautoclean/references/safety-rules.md).
+See [`skills/cleanmymac/references/safety-rules.md`](skills/cleanmymac/references/safety-rules.md).
 
 ---
 
 ## 🌍 Multi-language
 
-MacAutoClean is **bilingual** — auto-detects from `$LANG`:
+CleanMyMac is **bilingual** — auto-detects from `$LANG`:
 
 - `zh*` → 中文
 - anything else → English
@@ -209,24 +209,24 @@ MacAutoClean is **bilingual** — auto-detects from `$LANG`:
 Force a specific language any time:
 
 ```bash
-MAC_AUTOCLEAN_LANG=zh ~/.claude/skills/macautoclean/scripts/diskmap.sh
-MAC_AUTOCLEAN_LANG=en ~/.claude/skills/macautoclean/scripts/autoclean.sh
+CLEAN_MY_MAC_LANG=zh ~/.claude/skills/cleanmymac/scripts/diskmap.sh
+CLEAN_MY_MAC_LANG=en ~/.claude/skills/cleanmymac/scripts/autoclean.sh
 ```
 
 This README in other languages:
 - 🇺🇸 **English** *(this file)*
 - 🇨🇳 [简体中文](README.zh-CN.md)
 
-Want to add another language? Translation dictionary is a single bash file: [`skills/macautoclean/references/i18n.sh`](skills/macautoclean/references/i18n.sh). PRs welcome.
+Want to add another language? Translation dictionary is a single bash file: [`skills/cleanmymac/references/i18n.sh`](skills/cleanmymac/references/i18n.sh). PRs welcome.
 
 ---
 
 ## 🧱 Architecture
 
 ```
-MacAutoClean/
+CleanMyMac/
 ├── skills/
-│   └── macautoclean/                 # ⭐ the skill itself — Agent Skills spec
+│   └── cleanmymac/                 # ⭐ the skill itself — Agent Skills spec
 │       ├── SKILL.md                  # what the AI agent reads & follows
 │       ├── scripts/                  # lib, scan, execute, diskmap, autoclean, advisor, schedule
 │       ├── modules/                  # 68 cleanup categories (declarative shell files)
@@ -245,7 +245,7 @@ MacAutoClean/
 Each cleanup category is a single declarative shell file. Adding one = 5 minutes.
 
 ```bash
-# skills/macautoclean/modules/homebrew.sh
+# skills/cleanmymac/modules/homebrew.sh
 MODULE_NAME="Homebrew"
 MODULE_NAME_ZH="Homebrew"
 MODULE_DESCRIPTION="Outdated bottles, old downloads, unused dependencies"
@@ -263,7 +263,7 @@ Full spec: [`docs/module-spec.md`](docs/module-spec.md) · Advisor spec: [`docs/
 
 ## 📊 vs. other Mac cleaners
 
-| | **MacAutoClean** | CleanMyMac | mac-cleanup-py | Pearcleaner |
+| | **CleanMyMac** | CleanMyMac | mac-cleanup-py | Pearcleaner |
 |---|---|---|---|---|
 | Open source | ✅ MIT | ❌ Commercial | ✅ Apache-2.0 | ✅ Apache + CC |
 | Free | ✅ | ❌ $40/yr | ✅ | ✅ |
@@ -294,8 +294,8 @@ bash tests/test_smoke.sh                     # 6 end-to-end checks
 
 PRs welcome. Common contributions:
 
-- **New cleanup module** — copy `skills/macautoclean/modules/_template.sh`, fill in fields, run `bash tests/test_module_files.sh`. 5 minutes.
-- **New advisor heuristic** — copy `skills/macautoclean/advisor-heuristics/large_misc.sh`, implement `discover()`.
+- **New cleanup module** — copy `skills/cleanmymac/modules/_template.sh`, fill in fields, run `bash tests/test_module_files.sh`. 5 minutes.
+- **New advisor heuristic** — copy `skills/cleanmymac/advisor-heuristics/large_misc.sh`, implement `discover()`.
 - **New language** — add a `_i18n_<code>()` function in `references/i18n.sh` plus a dispatch case.
 
 See [`docs/contributing.md`](docs/contributing.md).
@@ -308,7 +308,7 @@ See [`docs/contributing.md`](docs/contributing.md).
 bash uninstall.sh
 ```
 
-Removes the `~/.claude/skills/macautoclean` symlink and any installed LaunchAgent.
+Removes the `~/.claude/skills/cleanmymac` symlink and any installed LaunchAgent.
 
 ---
 

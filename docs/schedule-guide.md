@@ -1,11 +1,11 @@
 # Schedule Guide
 
-MacAutoClean uses macOS-native `launchd` to run cleanup automatically.
+CleanMyMac uses macOS-native `launchd` to run cleanup automatically.
 
 ## Quick start
 
 ```bash
-~/.claude/skills/macautoclean/scripts/schedule.sh
+~/.claude/skills/cleanmymac/scripts/schedule.sh
 ```
 
 Follow the interactive prompts.
@@ -30,19 +30,19 @@ Follow the interactive prompts.
 ## Inspect
 
 ```bash
-~/.claude/skills/macautoclean/scripts/schedule.sh --status
+~/.claude/skills/cleanmymac/scripts/schedule.sh --status
 # or
-launchctl list | grep com.macautoclean
+launchctl list | grep com.cleanmymac
 ```
 
 ## Logs
 
-`~/Library/Logs/macautoclean-scheduled.log` — captures `autoclean.sh`'s stdout and stderr for every scheduled run.
+`~/Library/Logs/cleanmymac-scheduled.log` — captures `autoclean.sh`'s stdout and stderr for every scheduled run.
 
 ## Remove
 
 ```bash
-~/.claude/skills/macautoclean/scripts/unschedule.sh
+~/.claude/skills/cleanmymac/scripts/unschedule.sh
 ```
 
 ## Permissions
@@ -51,13 +51,13 @@ The LaunchAgent may need Full Disk Access (TCC) to read certain paths. If your s
 
 1. Open **System Settings → Privacy & Security → Full Disk Access**
 2. Add `/bin/bash` (the interpreter the agent runs as)
-3. Restart the agent: `launchctl kickstart -k gui/$UID/com.macautoclean`
+3. Restart the agent: `launchctl kickstart -k gui/$UID/com.cleanmymac`
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `launchctl bootstrap` says "already loaded" | Stale agent from prior install | `launchctl bootout gui/$UID ~/Library/LaunchAgents/com.macautoclean.plist`, then re-run schedule.sh |
+| `launchctl bootstrap` says "already loaded" | Stale agent from prior install | `launchctl bootout gui/$UID ~/Library/LaunchAgents/com.cleanmymac.plist`, then re-run schedule.sh |
 | Notifications not appearing | macOS not granted notification permission | Open `System Settings → Notifications → Script Editor`, allow alerts |
 | `plutil -lint` errors | Template was edited by hand | Re-render via `schedule.sh --dry-run` to see the issue |
-| Scheduled run reclaims 0 bytes | Caches were already empty (good!) or TCC issue (see Permissions) | Check `~/Library/Logs/macautoclean-scheduled.log` |
+| Scheduled run reclaims 0 bytes | Caches were already empty (good!) or TCC issue (see Permissions) | Check `~/Library/Logs/cleanmymac-scheduled.log` |

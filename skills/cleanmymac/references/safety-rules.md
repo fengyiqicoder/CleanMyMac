@@ -1,4 +1,4 @@
-# MacAutoClean Safety Rules
+# CleanMyMac Safety Rules
 
 These rules are **law**. Every script in `src/scripts/` and every module in `src/modules/` must enforce them. The whitelist (`whitelist.txt`) is the technical realization; this document explains the intent and lists invariants that have no representation in code but must still be honored.
 
@@ -47,4 +47,4 @@ Because we use direct delete (no quarantine), recovery comes from the data itsel
 - **Trash is the system-level safety net.** macOS keeps Trash for 30 days by default before auto-purge.
 - **Snapshots aren't backups.** Time Machine local snapshots are convenience copies; the authoritative backup is the remote Time Machine target. Deleting local snapshots does not affect remote backups.
 
-If a user needs more permanent rollback (rare), they should rely on Time Machine, not on MacAutoClean.
+If a user needs more permanent rollback (rare), they should rely on Time Machine, not on CleanMyMac.

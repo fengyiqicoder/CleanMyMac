@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# install.sh — link skills/macautoclean/ into ~/.claude/skills/macautoclean so Claude Code can discover it.
+# install.sh — link skills/cleanmymac/ into ~/.claude/skills/cleanmymac so Claude Code can discover it.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-SRC="$REPO_ROOT/skills/macautoclean"
-DST="$HOME/.claude/skills/macautoclean"
+SRC="$REPO_ROOT/skills/cleanmymac"
+DST="$HOME/.claude/skills/cleanmymac"
 
 if [[ ! -d "$SRC" ]]; then
   echo "ERROR: $SRC not found. Are you in the repo root?" >&2

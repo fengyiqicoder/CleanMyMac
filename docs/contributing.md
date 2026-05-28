@@ -1,32 +1,32 @@
-# Contributing to MacAutoClean
+# Contributing to CleanMyMac
 
-Thanks for the interest! MacAutoClean is intentionally simple and contributor-friendly. Most additions are 5-minute jobs.
+Thanks for the interest! CleanMyMac is intentionally simple and contributor-friendly. Most additions are 5-minute jobs.
 
 ## Common contributions
 
 ### 1. Add a new cleanup module
 
 ```bash
-cp skills/macautoclean/modules/_template.sh skills/macautoclean/modules/<your_category>.sh
-$EDITOR skills/macautoclean/modules/<your_category>.sh
+cp skills/cleanmymac/modules/_template.sh skills/cleanmymac/modules/<your_category>.sh
+$EDITOR skills/cleanmymac/modules/<your_category>.sh
 bash tests/test_module_files.sh    # must pass
 ```
 
-If your path isn't already whitelisted, add the prefix to `skills/macautoclean/references/whitelist.txt` and document it in `skills/macautoclean/references/whitelist.md`.
+If your path isn't already whitelisted, add the prefix to `skills/cleanmymac/references/whitelist.txt` and document it in `skills/cleanmymac/references/whitelist.md`.
 
 ### 2. Add a new advisor heuristic
 
 ```bash
-cp skills/macautoclean/advisor-heuristics/large_misc.sh skills/macautoclean/advisor-heuristics/<your_rule>.sh
-$EDITOR skills/macautoclean/advisor-heuristics/<your_rule>.sh
-skills/macautoclean/scripts/advisor.sh    # smoke check
+cp skills/cleanmymac/advisor-heuristics/large_misc.sh skills/cleanmymac/advisor-heuristics/<your_rule>.sh
+$EDITOR skills/cleanmymac/advisor-heuristics/<your_rule>.sh
+skills/cleanmymac/scripts/advisor.sh    # smoke check
 ```
 
 Heuristics must implement `discover()` emitting TSV (see `docs/advisor-spec.md`).
 
 ### 3. Improve scan/execute logic
 
-These live in `skills/macautoclean/scripts/scan.sh` and `skills/macautoclean/scripts/execute.sh`. After any change:
+These live in `skills/cleanmymac/scripts/scan.sh` and `skills/cleanmymac/scripts/execute.sh`. After any change:
 
 ```bash
 bash tests/test_lib.sh
@@ -52,5 +52,5 @@ bash tests/test_smoke.sh
 Please include:
 - macOS version (`sw_vers`)
 - The command you ran
-- Output of `~/Library/Logs/macautoclean.log` if relevant
+- Output of `~/Library/Logs/cleanmymac.log` if relevant
 - Whether `bash tests/test_smoke.sh` passes

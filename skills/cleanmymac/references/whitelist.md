@@ -1,4 +1,4 @@
-# MacAutoClean Whitelist Explained
+# CleanMyMac Whitelist Explained
 
 The authoritative machine-readable list is [`whitelist.txt`](./whitelist.txt). This document explains each section in human terms.
 
@@ -63,9 +63,9 @@ Obsidian, Dropbox, Google Drive — caches and logs only.
 
 Steam logs and appcache, Minecraft logs, Lunar Client logs and cache.
 
-## 14. MacAutoClean own state
+## 14. CleanMyMac own state
 
-`/tmp/macautoclean` — used for transient files (run logs, intermediate JSON). Safe to wipe.
+`/tmp/cleanmymac` — used for transient files (run logs, intermediate JSON). Safe to wipe.
 
 ---
 

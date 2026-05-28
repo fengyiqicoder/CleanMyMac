@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Tests for i18n — verifies:
-#   1. Language detection from MAC_AUTOCLEAN_LANG (priority) and $LANG (fallback)
+#   1. Language detection from CLEAN_MY_MAC_LANG (priority) and $LANG (fallback)
 #   2. tr() / i18n() returns key verbatim when no translation
 #   3. Every i18n key referenced in scripts has a zh translation
 #   4. The old `tr` shadow bug doesn't reappear (function must be named i18n)
@@ -8,7 +8,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-SCRIPTS="$REPO/skills/macautoclean/scripts"
+SCRIPTS="$REPO/skills/cleanmymac/scripts"
 
 PASS=0; FAIL=0
 ok()  { PASS=$((PASS+1)); }
@@ -20,18 +20,18 @@ assert_eq() {
 
 # ---- 1. Language detection ----
 
-# MAC_AUTOCLEAN_LANG=zh forces Chinese regardless of $LANG
+# CLEAN_MY_MAC_LANG=zh forces Chinese regardless of $LANG
 (
   unset MAC_LANG
-  export MAC_AUTOCLEAN_LANG=zh LANG=en_US.UTF-8
+  export CLEAN_MY_MAC_LANG=zh LANG=en_US.UTF-8
   . "$SCRIPTS/lib.sh"
   [[ "$MAC_LANG" == "zh" ]] || exit 1
 )
-[[ $? -eq 0 ]] && ok || bad "MAC_AUTOCLEAN_LANG=zh should force zh"
+[[ $? -eq 0 ]] && ok || bad "CLEAN_MY_MAC_LANG=zh should force zh"
 
-# MAC_AUTOCLEAN_LANG unset → falls through to LANG
+# CLEAN_MY_MAC_LANG unset → falls through to LANG
 (
-  unset MAC_LANG MAC_AUTOCLEAN_LANG
+  unset MAC_LANG CLEAN_MY_MAC_LANG
   export LANG=zh_CN.UTF-8
   . "$SCRIPTS/lib.sh"
   [[ "$MAC_LANG" == "zh" ]] || exit 1
@@ -40,25 +40,25 @@ assert_eq() {
 
 # Neither set → defaults to en
 (
-  unset MAC_LANG MAC_AUTOCLEAN_LANG LANG LC_ALL LC_CTYPE
+  unset MAC_LANG CLEAN_MY_MAC_LANG LANG LC_ALL LC_CTYPE
   . "$SCRIPTS/lib.sh"
   [[ "$MAC_LANG" == "en" ]] || exit 1
 )
 [[ $? -eq 0 ]] && ok || bad "no locale should default to en"
 
-# Explicit MAC_AUTOCLEAN_LANG=en wins over zh-locale
+# Explicit CLEAN_MY_MAC_LANG=en wins over zh-locale
 (
   unset MAC_LANG
-  export MAC_AUTOCLEAN_LANG=en LANG=zh_CN.UTF-8
+  export CLEAN_MY_MAC_LANG=en LANG=zh_CN.UTF-8
   . "$SCRIPTS/lib.sh"
   [[ "$MAC_LANG" == "en" ]] || exit 1
 )
-[[ $? -eq 0 ]] && ok || bad "MAC_AUTOCLEAN_LANG=en should override zh-locale"
+[[ $? -eq 0 ]] && ok || bad "CLEAN_MY_MAC_LANG=en should override zh-locale"
 
 # ---- 2. i18n() basics ----
 
 (
-  unset MAC_LANG; export MAC_AUTOCLEAN_LANG=en
+  unset MAC_LANG; export CLEAN_MY_MAC_LANG=en
   . "$SCRIPTS/lib.sh"
   out=$(i18n "Disk map")
   [[ "$out" == "Disk map" ]] || exit 1
@@ -66,7 +66,7 @@ assert_eq() {
 [[ $? -eq 0 ]] && ok || bad "en: i18n returns English key verbatim"
 
 (
-  unset MAC_LANG; export MAC_AUTOCLEAN_LANG=zh
+  unset MAC_LANG; export CLEAN_MY_MAC_LANG=zh
   . "$SCRIPTS/lib.sh"
   out=$(i18n "Disk map")
   [[ "$out" == "磁盘地图" ]] || exit 1
@@ -75,7 +75,7 @@ assert_eq() {
 
 # Unknown key → falls back to itself
 (
-  unset MAC_LANG; export MAC_AUTOCLEAN_LANG=zh
+  unset MAC_LANG; export CLEAN_MY_MAC_LANG=zh
   . "$SCRIPTS/lib.sh"
   out=$(i18n "completely-fabricated-key-12345")
   [[ "$out" == "completely-fabricated-key-12345" ]] || exit 1
@@ -85,7 +85,7 @@ assert_eq() {
 # ---- 3. Dictionary coverage: every $(i18n "...") key in scripts must have a zh entry ----
 
 (
-  unset MAC_LANG; export MAC_AUTOCLEAN_LANG=zh
+  unset MAC_LANG; export CLEAN_MY_MAC_LANG=zh
   . "$SCRIPTS/lib.sh"
 
   # Extract every literal passed to i18n in any script.
@@ -125,7 +125,7 @@ n_missing=$?
 # ---- 5. format-string keys preserve %s placeholders ----
 
 (
-  unset MAC_LANG; export MAC_AUTOCLEAN_LANG=zh
+  unset MAC_LANG; export CLEAN_MY_MAC_LANG=zh
   . "$SCRIPTS/lib.sh"
   fmt=$(i18n "About to clean %s auto-safe + %s review.")
   # Translated string must still contain two %s placeholders

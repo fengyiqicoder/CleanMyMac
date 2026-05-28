@@ -98,7 +98,7 @@ format_section() {
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════════════════════╗"
-printf "║  %s\n" "$(i18n 'MacAutoClean — SCAN RESULTS')"
+printf "║  %s\n" "$(i18n 'CleanMyMac — SCAN RESULTS')"
 echo "╚══════════════════════════════════════════════════════════════════════════════╝"
 
 echo ""
@@ -216,7 +216,7 @@ log "$(printf "$(i18n 'Disk free: %s → %s')" "$(format_bytes "$DISK_FREE")" "$
 
 if [[ "$NOTIFY_MODE" == "notify" ]] && command -v osascript >/dev/null 2>&1; then
   notify_msg="$(printf "$(i18n 'Reclaimed %s')" "$(format_bytes "$TOTAL_FREED")")"
-  osascript -e "display notification \"$notify_msg\" with title \"MacAutoClean\"" 2>/dev/null || true
+  osascript -e "display notification \"$notify_msg\" with title \"CleanMyMac\"" 2>/dev/null || true
 fi
 
 rm -f "$SCAN_OUT" "$EXEC_OUT"

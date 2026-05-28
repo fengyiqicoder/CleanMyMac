@@ -4,8 +4,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-export WHITELIST_FILE="$REPO/skills/macautoclean/references/whitelist.txt"
-. "$REPO/skills/macautoclean/scripts/lib.sh"
+export WHITELIST_FILE="$REPO/skills/cleanmymac/references/whitelist.txt"
+. "$REPO/skills/cleanmymac/scripts/lib.sh"
 
 PASS=0; FAIL=0
 
@@ -29,7 +29,7 @@ allow "$HOME/.Trash/foo"
 allow "$HOME/Downloads/oldfile.zip"
 allow "$HOME/Library/Caches/Google/Chrome/Default"
 allow "$HOME/Library/Application Support/Slack/Cache/data_0"
-allow "/tmp/macautoclean/run-001"
+allow "/tmp/cleanmymac/run-001"
 
 # --- must reject ---
 reject "$HOME/Documents/tax-return.pdf"

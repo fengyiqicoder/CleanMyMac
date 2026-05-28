@@ -1,14 +1,14 @@
 # Changelog
 
-All notable changes to MacAutoClean.
+All notable changes to CleanMyMac.
 
 ## [Unreleased]
 
 ### Changed
-- **Repo layout follows the [Agent Skills](https://agentskills.io/) spec.** Skill source moved from `src/` to `skills/macautoclean/`, so `SKILL.md` lives at the standard path that `npx skills add fengyiqicoder/MacAutoClean` (and skills.sh) expects. `install.sh`, tests, and docs updated accordingly — no functional change.
+- **Repo layout follows the [Agent Skills](https://agentskills.io/) spec.** Skill source moved from `src/` to `skills/cleanmymac/`, so `SKILL.md` lives at the standard path that `npx skills add fengyiqicoder/CleanMyMac` (and skills.sh) expects. `install.sh`, tests, and docs updated accordingly — no functional change.
 
 ### Added
-- `skills.sh.json` at the repo root — display config for the [skills.sh](https://skills.sh/fengyiqicoder/MacAutoClean) directory page.
+- `skills.sh.json` at the repo root — display config for the [skills.sh](https://skills.sh/fengyiqicoder/CleanMyMac) directory page.
 - README: install-via-skills.sh instructions and badge.
 
 ## [0.1.0] — 2026-05-22
@@ -29,4 +29,4 @@ Initial public release.
 - Browser cookies, login data, history, bookmarks, and preferences are explicitly excluded from all cache-clearing modules.
 - iCloud Drive, Mail, Messages, Keychain, SSH/GPG/AWS credentials are never touched.
 
-[0.1.0]: https://github.com/fengyiqicoder/MacAutoClean/releases/tag/v0.1.0
+[0.1.0]: https://github.com/fengyiqicoder/CleanMyMac/releases/tag/v0.1.0

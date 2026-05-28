@@ -12,10 +12,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/lib.sh"
 
-AGENT_PATH="$HOME/Library/LaunchAgents/com.macautoclean.plist"
-LOG_PATH="$HOME/Library/Logs/macautoclean-scheduled.log"
-TEMPLATE="$TEMPLATES_DIR/com.macautoclean.plist.tmpl"
-LABEL="com.macautoclean"
+AGENT_PATH="$HOME/Library/LaunchAgents/com.cleanmymac.plist"
+LOG_PATH="$HOME/Library/Logs/cleanmymac-scheduled.log"
+TEMPLATE="$TEMPLATES_DIR/com.cleanmymac.plist.tmpl"
+LABEL="com.cleanmymac"
 
 if [[ ! -f "$TEMPLATE" ]]; then
   err "template not found: $TEMPLATE"; exit 1
@@ -65,11 +65,11 @@ if [[ "$ACTION" == "next" ]]; then
 fi
 
 # ---- Interactive (or preset) setup ----
-echo "$(i18n 'MacAutoClean — Scheduled Auto-Run Setup')"
+echo "$(i18n 'CleanMyMac — Scheduled Auto-Run Setup')"
 echo ""
 
 if [[ -z "$PRESET" ]]; then
-  echo "$(i18n 'How often should MacAutoClean run?')"
+  echo "$(i18n 'How often should CleanMyMac run?')"
   echo "$(i18n '  1) Weekly (Sunday 3 AM)')"
   echo "$(i18n '  2) Every 2 weeks (1st and 15th of the month, 3 AM)')"
   echo "$(i18n '  3) Monthly (1st of the month, 3 AM)')"

@@ -1,4 +1,4 @@
-# Template for a MacAutoClean cleanup module.
+# Template for a CleanMyMac cleanup module.
 # Copy this file as src/modules/<your_category>.sh and fill in the values.
 # This file (starting with _) is skipped by the loader.
 

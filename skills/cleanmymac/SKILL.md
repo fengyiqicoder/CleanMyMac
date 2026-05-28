@@ -1,9 +1,9 @@
 ---
-name: macautoclean
+name: cleanmymac
 description: Use when the user wants to free disk space on a Mac. Triggers on "clean my Mac", "free up space", "disk full", "where did my storage go", "全自动清理 Mac", "清理储存空间", "Xcode is eating my disk", "Docker is huge", "what's taking my disk", "show me a disk map", "set up auto cleanup", "find large unused folders", "find old AI models", "schedule cleanup". Walks the filesystem from any path, annotates every folder with auto-safe / review / never-touch / unknown based on a 51-module judgment registry, and supports both bulk auto-clean and per-item interactive review. Can install recurring auto-cleanup via launchd.
 ---
 
-# MacAutoClean
+# CleanMyMac
 
 ## Architecture — discovery vs judgment vs action
 
@@ -20,7 +20,7 @@ Three separate layers. Never conflate them.
 ### Phase 1 — Discover with diskmap (default)
 
 ```
-~/.claude/skills/macautoclean/scripts/diskmap.sh
+~/.claude/skills/cleanmymac/scripts/diskmap.sh
 ```
 
 Output: every folder ≥ 2 GB, auto-drilled to specific classifiable items, grouped into THREE tiers (no "unknown" — diskmap auto-classifies via registry + heuristics):
@@ -57,10 +57,10 @@ After the code block, you MAY add at most ONE short sentence recommending the ne
 After the user understands the landscape, ask which mode:
 
 ```
-~/.claude/skills/macautoclean/scripts/autoclean.sh                          # scan modules + show 3-tier breakdown
-~/.claude/skills/macautoclean/scripts/autoclean.sh --auto-safe --yes        # delete auto-safe in bulk (recommended)
-~/.claude/skills/macautoclean/scripts/autoclean.sh --review                 # interactive per-item for medium/high
-~/.claude/skills/macautoclean/scripts/autoclean.sh --all                    # both
+~/.claude/skills/cleanmymac/scripts/autoclean.sh                          # scan modules + show 3-tier breakdown
+~/.claude/skills/cleanmymac/scripts/autoclean.sh --auto-safe --yes        # delete auto-safe in bulk (recommended)
+~/.claude/skills/cleanmymac/scripts/autoclean.sh --review                 # interactive per-item for medium/high
+~/.claude/skills/cleanmymac/scripts/autoclean.sh --all                    # both
 ```
 
 The `--review` mode walks the user through each medium/high-risk module: shows name + size + what-it-is + what-happens-if-deleted, then prompts `[d]elete / [k]eep / [q]uit`.
@@ -81,7 +81,7 @@ For folders that turn out to be safe regenerable data (e.g. a new AI tool's cach
 `advisor.sh` runs 9 specific heuristics for things diskmap can't auto-classify by path alone (e.g. old node_modules in any project, stale conda envs, downloaded chat media). Use it when diskmap surfaces unknown folders that match these patterns.
 
 ```
-~/.claude/skills/macautoclean/scripts/advisor.sh --interactive
+~/.claude/skills/cleanmymac/scripts/advisor.sh --interactive
 ```
 
 ### Phase 5 — Schedule (optional)
@@ -89,7 +89,7 @@ For folders that turn out to be safe regenerable data (e.g. a new AI tool's cach
 Ask: "Want auto-cleanup to run weekly without you asking?"
 
 ```
-~/.claude/skills/macautoclean/scripts/schedule.sh
+~/.claude/skills/cleanmymac/scripts/schedule.sh
 ```
 
 Interactive: pick cadence (weekly/biweekly/monthly/custom) and scope. Most users want weekly + safe-only.
@@ -128,11 +128,11 @@ Interactive: pick cadence (weekly/biweekly/monthly/custom) and scope. Most users
 
 All scripts auto-detect language from `$LANG` (`zh*` → Chinese, anything else → English). If the user is conversing with you in Chinese but their shell `$LANG` is `en_US.UTF-8` (common on macOS), the disk report will come out in English — which is wrong.
 
-**Fix**: before invoking any script, export `MAC_AUTOCLEAN_LANG` to match the conversation language. This always wins over `$LANG`:
+**Fix**: before invoking any script, export `CLEAN_MY_MAC_LANG` to match the conversation language. This always wins over `$LANG`:
 
 ```bash
-MAC_AUTOCLEAN_LANG=zh ~/.claude/skills/macautoclean/scripts/autoclean.sh
-MAC_AUTOCLEAN_LANG=en ~/.claude/skills/macautoclean/scripts/diskmap.sh
+CLEAN_MY_MAC_LANG=zh ~/.claude/skills/cleanmymac/scripts/autoclean.sh
+CLEAN_MY_MAC_LANG=en ~/.claude/skills/cleanmymac/scripts/diskmap.sh
 ```
 
 The override flows into every downstream script via `MAC_LANG` (exported by `lib.sh`). Translation dictionary lives in [`references/i18n.sh`](references/i18n.sh) — keyed on English source strings, gettext-style. Adding a string: wrap with `$(i18n "English literal")` at the call site, add a case branch under `_i18n_zh`.
