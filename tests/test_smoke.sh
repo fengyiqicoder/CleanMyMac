@@ -66,6 +66,11 @@ if "$SCRIPTS/schedule.sh" --preset weekly --dry-run >"$TMP_OUT" 2>&1; then
     else
       bad "rendered plist failed plutil -lint"
     fi
+    if grep -q -- '<string>--auto-safe</string>' "$PLIST_TMP"; then
+      ok "scheduled cleanup selects the auto-safe tier"
+    else
+      bad "scheduled cleanup is missing the --auto-safe tier"
+    fi
     rm -f "$PLIST_TMP"
   else
     bad "schedule.sh dry-run produced no plist"
